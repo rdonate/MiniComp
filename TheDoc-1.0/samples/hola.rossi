@@ -1,0 +1,13 @@
+# Escribe hola mundo en el terminal de entrada/salida
+
+	.data
+
+	.asciiz "Hola mundo!\n"
+
+	.text
+
+	addi	$sc, $zero, 2	# Código de imprimir cadena
+	addi	$a0, $zero, 0	# Dirección de la cadena
+	syscall
+	addi	$sc, $zero, 6	# exit
+	syscall

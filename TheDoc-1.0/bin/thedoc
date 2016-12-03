@@ -1,0 +1,54 @@
+#!/usr/bin/env python
+# -*- coding: latin1 -*-
+
+import sys
+import getopt
+import text
+
+def uso():
+  print "Uso: thedoc [opciones] [fichero]"
+  print "Opciones:"
+  print "    -h: imprime esta ayuda."
+  print "    -b: arranca en modo batch normal."
+  print "    -B: arranca en modo batch limpio."
+  print "    -t: arranca en modo texto."
+  print "    -g: arranca en modo gráfico."
+  sys.exit(1)
+
+try:
+  optlist, args = getopt.getopt(sys.argv[1:], "hbBtg", [])
+except getopt.GetoptError:
+  print "Opción incorrecta."
+  uso()
+modo = "gráfico"
+limpio = None
+for op in optlist:
+  if op[0] =="-h":
+    uso()
+  elif op[0] == "-b":
+    modo = "batch"
+  elif op[0] == "-B":
+    modo = "batch"
+    limpio = "yes"
+  elif op[0] == "-t":
+    modo = "texto"
+  elif op[0] == "-g":
+    modo = "gráfico"
+if not args:
+  fich = None
+elif len(args) == 1:
+  fich = args[0]
+else:
+  print "Número de argumentos incorrecto."
+  uso()
+if modo == "batch":
+    text.Text(fich, batch=1, clean=limpio)
+elif modo == "texto":
+    text.Text(fich)
+elif modo == "gráfico":
+  try:
+    import gui
+    gui.GUI(fich)
+  except (ImportError, gui.TclError), e:
+    print "Activado modo texto a causa del siguiente error: %s\n" % e
+    text.Text(fich)

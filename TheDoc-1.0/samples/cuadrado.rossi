@@ -1,0 +1,39 @@
+# Imprime el cuadrado de los N primeros números, indicados por el usuario
+
+	.data
+
+	.asciiz "El cuadrado de "
+	.asciiz 20 " es "
+	.asciiz 25 "\n"
+	.asciiz 30 "N: "
+
+	.text
+
+	addi	$sc, $zero, 2
+	addi	$a0, $zero, 30
+	syscall
+	addi	$sc, $zero, 3
+	syscall
+	add	$r0, $a0, $zero	# Copia el límite en $r0
+	addi	$r1, $zero, 1		# $r1 = Índice
+cond:	bgt	$r1, $r0, fin
+	mult	$r2, $r1, $r1	# Cuadrado en $r2
+	addi	$sc, $zero, 2
+	addi	$a0, $zero, 0
+	syscall
+	addi	$sc, $zero, 0
+	add	$a0, $r1, $zero
+	syscall
+	addi	$sc, $zero, 2
+	addi	$a0, $zero, 20
+	syscall
+	addi	$sc, $zero, 0
+	add	$a0, $r2, $zero
+	syscall
+	addi	$sc, $zero, 2
+	addi	$a0, $zero, 25
+	syscall
+	addi	$r1, $r1, 1	# Incrementa el índice
+	j	cond
+fin:	addi	$sc, $zero, 6
+	syscall

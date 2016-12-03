@@ -1,0 +1,7 @@
+# Error de ejecución
+# No se especifica el entero a escribir
+
+	.text
+
+	addi $sc, $zero,  0
+	syscall

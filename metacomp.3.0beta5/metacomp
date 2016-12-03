@@ -1,0 +1,334 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+#
+##############################################################################
+#
+# metacomp 3.0beta5: a metacompiler for RLL(1) grammars
+# Copyright (C) 2011 Juan Miguel Vilar and Andrés Marzal
+#                    Universitat Jaume I, Castelló (Spain)
+#
+# This program is free software; you can redistribute it and/or
+#  modify it under the terms of the GNU General Public License
+#  as published by the Free Software Foundation; either version 2
+#  of the License, or (at your option) any later version.
+#
+#  This program is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU General Public License for more details.
+#
+#  You should have received a copy of the GNU General Public License
+#  along with this program; if not, write to the Free Software
+#  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+#
+#  Any questions regarding this software should be directed to:
+#
+#   Juan Miguel Vilar
+#   Departament de Llenguatges i Sistemes Informàtics
+#   Universitat Jaume I
+#   E12071 Castellón (SPAIN)
+#
+#   email: jvilar@lsi.uji.es
+#
+##############################################################################
+#
+# Fichero: metacomp
+#
+# Fichero principal de metacomp
+#
+
+import sys
+
+import mc_libs.analex as analex
+from mc_libs.analizador import AnalizadorSintactico
+from mc_libs.gramatica import Gramatica, NoTerminal, Iteracion, Opcional, Repeticion
+from mc_libs.errores import *
+from mc_libs.generador import genera_analizador
+
+#
+# Ayuda:
+#
+
+def ayuda():
+  sys.stderr.write(r"""
+  metacomp 3.0beta5: a metacompiler for RLL(1) grammars
+  Copyright (C) 2011 Juan Miguel Vilar and Andrés Marzal
+  metacomp comes with ABSOLUTELY NO WARRANTY; for details
+  use option "--licencia".  This is free software, and you are welcome
+  to redistribute it under certain conditions; use option "--licencia"
+  for details.
+
+  Uso: metacomp [<opciones>] [fichero.mc]
+  donde "fichero.mc" es el fichero de entrada, si no se especifica,
+  se utiliza la entrada estándar.
+ OPCIONES:
+   -h|--help|-a|--ayuda: muestra este texto.
+   -s|--salida <fichero>: fichero de salida.
+   -C|--codEntrada <cod>: indica que el fichero de entrada usa la
+                   codificación <cod>, por defecto "utf-8"
+   -c|--codSalida <cod>: hace que la salida del programa generado use
+                   la codificación <cod>, por defecto "utf-8"
+   -A|--arbol:     añade código para mostrar el árbol de análisis.
+   -t|--traza:     añade código para mostrar trazas de ejecución.
+   -e|--esquema:   muestra el esquema de traducción, ocultando
+                   las zonas de código de usuario, equivalente a -m esquema.
+   -g|--gramatica: muestra el esquema de traducción, ocultando
+                   acciones, tratamiento de errores y zonas de código
+                   de usuario, equivalente a -m gramatica.
+   -l|--lexico <fichero>: sustituye el analizador generado por metacomp por la
+                          línea "from <fichero> import AnalizadorLexico".
+   -L|--licencia: muestra la licencia del programa.
+   -m|--muestra <qué>: muestra las estructuras indicadas en <qué>, una lista
+                   separada por comas de uno o más de las siguientes:
+                   %s y %s.
+   -p|--puro: crea un analizador sintáctico "puro" (sin acciones semánticas).
+   -S|--sololexico: genera únicamente el analizador léxico.
+
+""" % (", ".join(_puedeMostrar[:-1]), _puedeMostrar[-1]))
+
+#
+# Licencia:
+#
+
+def licencia():
+  sys.stderr.write(r"""
+ metacomp 3.0beta5: a metacompiler for RLL(1) grammars
+ Copyright (C) 2011 Juan Miguel Vilar and Andrés Marzal
+                    Universitat Jaume I, Castelló (Spain)
+
+ This program is free software; you can redistribute it and/or
+ modify it under the terms of the GNU General Public License
+ as published by the Free Software Foundation; either version 2
+ of the License, or (at your option) any later version.
+
+ This program is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU General Public License for more details.
+
+ You should have received a copy of the GNU General Public License
+ along with this program; if not, write to the Free Software
+ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+
+ Any questions regarding this software should be directed to:
+
+   Juan Miguel Vilar
+   Departament de Llenguatges i Sistemes Informàtics
+   Universitat Jaume I
+   E12071 Castellón (SPAIN)
+
+   email: jvilar@lsi.uji.es
+
+""")
+
+def argumento(l, i):
+  if i < len(l):
+    return l[i]
+  else:
+    escribe_error(sys.stderr, u"Error: Falta el argumento de %s.\n" % l[i-1])
+    sys.exit(1)
+
+#
+# Principal:
+#
+
+def preparaSalida(fsalida):
+  if fsalida == "":
+    salida = sys.stdout
+  else:
+    try:
+      salida = open(fsalida, "w")
+    except IOError:
+      escribe_error(sys.stderr, u"Error: No he podido abrir %s para escritura.\n" % fsalida)
+      sys.exit(1)
+  return salida
+
+def hazEjecutable(fsalida):
+  try:
+    if fsalida:
+      os.chmod(fsalida, 0744)
+  except:
+    pass
+
+_puedeMostrar = ["anulables", "esquema", "gramatica", "lexico", "primeros", "siguientes"]
+
+def main():
+  fentrada = ""
+  fsalida = ""
+  traza = None # valores: None, "t": traza, "A": árbol
+  mostrar = set([])
+  lexico = None
+  tipoAnalizador ="normal" # valores: normal, lexico, puro
+  codSalida = "utf-8"
+  codEntrada = "utf-8"
+
+  args = len(sys.argv)
+  i = 1
+  while i < args:
+    if sys.argv[i] in ["-C", "--codEntrada"]:
+      i += 1
+      codEntrada = argumento(sys.argv, i)
+    elif sys.argv[i] in ["-c", "--codSalida"]:
+      i += 1
+      codSalida = argumento(sys.argv, i)
+    elif sys.argv[i] in ["-e", "--esquema"]:
+      mostrar.add("esquema")
+    elif sys.argv[i] in ["-g", "--gramatica"]:
+      mostrar.add("gramatica")
+    elif sys.argv[i] in ["-h", "--help", "-a", "-ayuda"]:
+      ayuda()
+      sys.exit(-1)
+    elif sys.argv[i] in ["-l", "--lexico"]:
+      i = i+1
+      lexico = argumento(sys.argv, i)
+    elif sys.argv[i] in ["-m", "--muestra"]:
+      i = i+1
+      for m in argumento(sys.argv, i).split(","):
+        if not m in _puedeMostrar:
+          sys.stderr.write((u"No sé qué es %s y me has pedido que lo muestre.\n" % m).encode("utf-8"))
+          sys.exit(1)
+        mostrar.add(m)
+    elif sys.argv[i] in ["-s", "--salida"]:
+      i = i+1
+      fsalida = argumento(sys.argv, i)
+    elif sys.argv[i] in ["-A", "--arbol"]:
+      traza = "A" # arbol
+    elif sys.argv[i] in ["-t", "--traza"]:
+      traza = "t" # traza
+    elif sys.argv[i] in ["-S", "--sololexico"]:
+      tipoAnalizador = "lexico"
+    elif sys.argv[i] in ["-p", "--puro"]:
+      tipoAnalizador = "puro"
+    elif sys.argv[i][0] == "-":
+      ayuda()
+      sys.exit(-1)
+    else:
+      fentrada = argumento(sys.argv,i)
+    i = i+1
+
+  if not fentrada:
+    entrada = sys.stdin
+  else:
+    try:
+      entrada = open(fentrada, "r")
+    except IOError:
+      escribe_error(sys.stderr, u"Error: No he podido abrir %s para lectura.\n" % fentrada)
+      sys.exit(1)
+
+  analex.cambiaCodificacion(codEntrada)
+
+  try:
+    A = AnalizadorSintactico(entrada)
+    abandonar = A.Compilador.abandonar
+  except DemasiadosErrores:
+    abandonar = True
+
+  if abandonar:
+    muestra_errores_y_avisos()
+    sys.exit(-1)
+
+  G = A.Compilador.G
+  lexica = A.Compilador.lexica
+  codusuario = A.Compilador.codusuario
+
+
+  if G == None or G.reglas == []:
+    if tipoAnalizador != "lexico":
+      muestra_errores_y_avisos()
+      escribe_error(sys.stderr, u"Aviso: No se ha especificado ningún esquema de traducción, utiliza la opción -S si sólo quieres generar un analizador léxico.\n")
+      sys.exit(-1)
+    else:
+      muestra_errores_y_avisos()
+      salida = preparaSalida(fsalida)
+      genera_analizador(G, lexica, codusuario, traza, salida, codSalida, lexico, tipoAnalizador)
+      hazEjecutable(fsalida)
+      return
+
+  # Elementos de la gramática interseantes para mostrar
+  interesantes = [ s for s in G.inventario if isinstance(s, NoTerminal)
+                   or isinstance(s, Iteracion) or isinstance(s, Repeticion)
+                   or isinstance(s, Opcional) ]
+  # Mostrar lo que se pida:
+  for t in sorted(set(mostrar)):
+    if t == "anulables":
+      sys.stderr.write("+ Anulables:\n")
+      l = set([ simbolo.regla() for simbolo in interesantes if simbolo.anulable() ])
+      l.discard("")
+      if len(l) == 0:
+        sys.stderr.write("Ninguno\n")
+      else:
+        for simbolo in sorted(l):
+          sys.stderr.write(simbolo+"\n")
+    elif t == "esquema":
+      sys.stderr.write("+ Esquema de traducción:\n")
+      sys.stderr.write(unicode(G).encode("utf-8"))
+      sys.stderr.write("\n")
+    elif t == "gramatica":
+      sys.stderr.write("+ Gramática:\n")
+      sys.stderr.write(G.lista_reglas())
+      sys.stderr.write("\n")
+    elif t == "lexico":
+      if lexica:
+        for (cat, func, er) in lexica:
+          sys.stderr.write((u"%s\t%s\t%s\n" % (analex.prettyCat(cat), func, er)).encode("utf-8"))
+      else:
+        sys.stderr.write("No hay categorías léxicas")
+    elif t == "primeros":
+      sys.stderr.write("+ Primeros:\n")
+      l = set([ "primeros(%s)= { %s }" % (simbolo.regla(), ", ".join(sorted([analex.prettyCat(j) for j in simbolo.primeros()])))
+           for simbolo in interesantes ])
+      for linea in sorted(l):
+        sys.stderr.write(linea+"\n")
+    elif t == "siguientes":
+      sys.stderr.write("+ Siguientes:\n")
+      l = set([ "siguientes(%s)= { %s }" % (simbolo.regla(), ", ".join(sorted([analex.prettyCat(j) for j in simbolo.siguientes()])))
+           for simbolo in interesantes ])
+      for linea in sorted(l):
+        sys.stderr.write(linea+"\n")
+
+
+  # Comprobar si todo símbolo no terminal es parte izquierda de al menos una producción
+  for nt in G.noterminales:
+    if len(nt.reglasizda) == 0:
+      escribe_error(sys.stderr, u"Aviso: El símbolo %s no aparece en ninguna parte izquierda.\n" % nt)
+
+  if errores.e or avisos.e: muestra_errores_y_avisos()
+  if errores.e: sys.exit(-1)
+
+  # Comprobación de conflictos:
+  l = G.recursividad_izquierda()
+  if l:
+    for nt in l:
+      escribe_error(sys.stderr, "Error: El no terminal %s tiene recursividad a izquierdas.\n" % nt)
+    sys.exit(1)
+
+  G.comprueba_conflictos(sys.stderr)
+
+  # Generar el analizador
+  if not lexica and lexico is None:
+    escribe_error(sys.stderr, u"No puede haber una especificación léxica vacía si no se da un analizador léxico como parámetro.\n")
+    sys.exit(1)
+
+  if lexico is None:
+    cats = set([ c for c, _, _ in lexica if c!= None ])
+    if cats != G.terminales:
+      d = sorted(cats - G.terminales)
+      if len(d) != 0:
+        escribe_error(sys.stderr, u"Aviso: las categorías [%s] no están en la gramática.\n" % ", ".join(d))
+      d = sorted(G.terminales - cats)
+      if len(d) != 0:
+        escribe_error(sys.stderr, u"Aviso: las categorías [%s] no están en la especificación léxica.\n" % ", ".join(d))
+    vacias = set([ c for c, _, er in lexica if er.isEmpty() ])
+    if len(vacias) > 0:
+      if None in vacias:
+        escribe_error(sys.stderr, u"Error, algunas de las categorías que se omiten aceptan la cadena vacía.\n")
+        vacias.remove(None)
+      if len(vacias) > 0:
+        escribe_error(sys.stderr, u"Error, las categorías [%s] aceptan la cadena vacía.\n" % ", ".join(vacias))
+      sys.exit(1)
+  salida = preparaSalida(fsalida)
+  genera_analizador(G, lexica, codusuario, traza, salida, codSalida, lexico, tipoAnalizador)
+  hazEjecutable(fsalida)
+
+# Llamada al programa principal
+main()

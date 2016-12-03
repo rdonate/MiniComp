@@ -1,0 +1,567 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+##############################################################################
+#
+# verArbol 0.6: a simple tree visualizer
+# Copyright (C) 2010 Juan Miguel Vilar
+#                    Universitat Jaume I, Castelló (Spain)
+#
+# This program is free software; you can redistribute it and/or
+#  modify it under the terms of the GNU General Public License
+#  as published by the Free Software Foundation; either version 2
+#  of the License, or (at your option) any later version.
+#
+#  This program is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU General Public License for more details.
+#
+#  You should have received a copy of the GNU General Public License
+#  along with this program; if not, write to the Free Software
+#  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+#
+#  Any questions regarding this software should be directed to:
+#
+#   Juan Miguel Vilar
+#   Departament de Llenguatges i Sistemes Informàtics
+#   Universitat Jaume I
+#   E12071 Castellón (SPAIN)
+#
+#   email: jvilar@lsi.uji.es
+#
+##############################################################################
+#
+#  Fichero: verArbol
+#
+#  Permite ver árboles
+#
+
+version="0.6"
+anyoVersion="2010"
+
+
+from types import ListType, StringType
+from Tkinter import *
+import tkFont, tkFileDialog
+import Pmw
+import string
+import sys
+from mc_libs.vAanalizador import AnalizadorSintactico, vAExcepcion
+
+import sys
+
+class Ventana:
+  def __init__(self, nombre, nomfichero):
+    self.nombre= nombre
+    self.raiz= Tk()
+    self.raiz.protocol("WM_DELETE_WINDOW", self.salir)
+    self.hazWidgets()
+    self.titulo(nombre)
+    self.lista=[]
+    self.abrir(nomfichero)
+    self.raiz.mainloop()
+
+  def titulo(self, t):
+    self.raiz.title(t)
+
+  def hazMenues(self, f):
+    self.fmenues= Frame(f, relief= RAISED, bd= 2)
+    b= Menubutton(self.fmenues,
+                  text= "Fichero")
+    menu= Menu(b, tearoff= 0)
+    menu.add_command(label= "Abrir", command= self._abrir)
+    menu.add_command(label= "Exportar a dot", command= self.exportar)
+    menu.add_separator()
+    menu.add_command(label= "Salir", command= self.salir)
+    b.pack(side= LEFT)
+    b['menu']= menu
+
+    b= Menubutton(self.fmenues,
+                  text= "Ayuda")
+    menu= Menu(b, tearoff= 0)
+    menu.add_command(label= "Botones", command= self.botones)
+    menu.add_separator()
+    menu.add_command(label= "Acerca de", command= self.acerca)
+    b.pack(side= RIGHT)
+    b['menu']= menu
+    self.fmenues.grid(sticky= E+W)
+
+  def acerca(self):
+    Pmw.aboutversion(version)
+    Pmw.aboutcopyright("Copyright Juan Miguel Vilar %d" % anyoVersion)
+    Pmw.aboutcontact("email: jvilar@lsi.uji.es")
+    Pmw.AboutDialog(self.raiz, applicationname="verArbol")
+
+  def botones(self):
+    d= Pmw.TextDialog(self.raiz,
+                      title= "Ayuda",
+                      buttons= ('Seguir',),
+                      defaultbutton= 0)
+    texto= """
+Uso de los botones:
++ Botón izquierdo: si el subárbol bajo
+   el nodo está oculto, lo muestra, si
+   es visible, lo oculta.
++ Botón derecho: hace que la raíz sea
+   el nodo sobre el que se pulsa o devuelve
+   el árbol al estado anterior."""
+    d.insert("end", texto)
+    d.configure(text_state="disabled")
+
+  def _abrir(self):
+    fich= tkFileDialog.askopenfilename()
+    if fich:
+      self.abrir(fich)
+
+  def abrir(self, fichero):
+    if ( fichero=="" ):
+      f= sys.stdin
+    else:
+      try:
+        f= open(fichero)
+      except:
+        Pmw.MessageDialog(self.raiz,
+                          title= "Error",
+                          message_text= "Error abriendo el fichero %s" % fichero,
+                          buttons= ('Seguir',),
+                          defaultbutton= 0)
+        return
+    try:
+      A= AnalizadorSintactico(f)
+      self.lista= map(lambda x: Arbol(x), A.Entrada.arboles)
+      self.titulo(self.nombre+": "+fichero)
+      self.navegador.cambiaMaximo(len(self.lista))
+      self.navegador.cambiaPosicion(0)
+    except vAExcepcion, m:
+      Pmw.MessageDialog(self.raiz,
+                        title= "Error",
+                        message_text= "Error leyendo el árbol desde %s:\n%s" % (fichero, str(m)),
+                        buttons= ('Seguir',),
+                        defaultbutton= 0)
+
+  def exportar(self):
+    fich= tkFileDialog.asksaveasfilename()
+    if fich:
+      try:
+        f= open(fich, "w")
+      except:
+        print fich
+        Pmw.MessageDialog(self.raiz,
+                          title= "Error",
+                          message_text= "Error abriendo el fichero %s." % fich,
+                          buttons= ('Seguir',),
+                          defaultbutton= 0)
+        return
+      f.write(self.salida.arbol.dot())
+      f.close()
+
+  def hazWidgets(self):
+    f= Frame(self.raiz)
+    self.hazMenues(f)
+    f.rowconfigure(1, weight=1)
+    f.columnconfigure(0, weight=1)
+    fver= Frame(f, relief= GROOVE, bd= 2)
+    self.salida= visualizadorArbol(fver)
+    fver.grid(sticky= N+S+W+E)
+    ffondo= Frame(f, relief= GROOVE, bd= 2)
+    fnavegador= Frame(ffondo, relief= FLAT)
+    self.navegador= Navegador(fnavegador, 0, self.cambiaPosicion)
+    fnavegador.pack(side= LEFT, expand= NO)
+    Button(ffondo, text= "Salir", command= self.salir).pack(side= RIGHT)
+    ffondo.grid(sticky=E+W)
+    f.pack(side= TOP, expand= YES, fill= BOTH)
+
+  def cambiaPosicion(self, pos):
+    if 0<= pos < len(self.lista):
+      self.pos= pos
+      self.salida.cambia(self.lista[pos])
+
+  def salir(self):
+    sys.exit(0)
+
+class Navegador:
+  def __init__(self, frame, maximo, mueve):
+    self.maximo= maximo
+    self.pos= 0
+    self.mueve= mueve
+    self.crearBitmaps()
+    self.hazWidgets(frame)
+    self.notificaPosicion(0)
+
+  def hazWidgets(self, f):
+    self.bprincipio= Button(f,
+           image="principio",
+           command= lambda x= self: x.cambiaPosicion(0),
+           takefocus= 0)
+    self.bprincipio.pack(side= LEFT)
+    self.bizquierdo= Button(f,
+           image="izquierda",
+           command= lambda x=self: x.cambiaPosicion(x.pos-1),
+           takefocus= 0)
+    self.bizquierdo.pack(side= LEFT)
+    self.salidaPosicion= Entry(f, relief= FLAT, width= 3 )
+#    self.salidaPosicion.insert(0,"0/0")
+    self.salidaPosicion.pack(side=LEFT)
+    self.salidaPosicion.bind("<FocusIn>", self.entraFoco)
+    self.salidaPosicion.bind("<FocusOut>", self.finFoco)
+    self.salidaPosicion.bind("<Return>", self.enter)
+    self.salidaPosicion.configure(font= self.bizquierdo.cget("font"))
+    self.bderecho= Button(f,
+           image="derecha",
+           command= lambda x=self: x.cambiaPosicion(x.pos+1),
+           takefocus= 0)
+    self.bderecho.pack(side= LEFT)
+    self.bfinal= Button(f,
+           image="final",
+           command= lambda x=self: x.cambiaPosicion(x.maximo-1),
+           takefocus= 0)
+    self.bfinal.pack(side= LEFT)
+
+  def cambiaMaximo(self, nmax):
+    self.maximo= nmax
+    if self.pos< nmax:
+      self.notificaPosicion(self.pos)
+    else:
+      self.cambiaPosicion(self, nmax)
+
+  def cambiaPosicion(self, pos):
+    self.mueve(pos)
+    self.notificaPosicion(pos)
+
+  def notificaPosicion(self, pos, maximo= None):
+    self.pos= pos
+    if maximo!= None:
+      self.maximo= maximo
+    self.salidaPosicion.delete(0,END)
+    if self.maximo> 0:
+      s= "%d/%d" % (pos +1, self.maximo)
+    else:
+      s= "0/0"
+    self.salidaPosicion.configure(width= len(s))
+    self.salidaPosicion.insert(0,s)
+    if pos==0:
+      self.bizquierdo.configure(state= DISABLED)
+      self.bprincipio.configure(state= DISABLED)
+    else:
+      self.bizquierdo.configure(state= NORMAL)
+      self.bprincipio.configure(state= NORMAL)
+    if pos>=self.maximo-1:
+      self.bderecho.configure(state= DISABLED)
+      self.bfinal.configure(state= DISABLED)
+    else:
+      self.bderecho.configure(state= NORMAL)
+      self.bfinal.configure(state= NORMAL)
+
+  def entraFoco(self, a):
+    self.salidaPosicion.delete(0,END)
+    self.salidaPosicion.insert(0, "%d" % (self.pos+1))
+    self.salidaPosicion.select_range(0,END)
+
+  def leePosicion(self):
+    try:
+      nueva= int(self.salidaPosicion.get())-1
+      if nueva< 0 or nueva>= self.maximo:
+        nueva= self.pos
+    except ValueError:
+      nueva= self.pos
+    self.pos= nueva
+    self.mueve(nueva)
+
+  def finFoco(self, a):
+    self.leePosicion()
+    self.notificaPosicion(self.pos)
+
+  def enter(self, a):
+    self.leePosicion()
+    self.notificaPosicion(self.pos)
+    self.entraFoco(a)
+
+  # Están fuera
+  bmaps=[]
+  def crearBitmaps(self):
+    if not Navegador.bmaps:
+      Navegador.bmaps= [BitmapImage(name="derecha", data=r"""
+#define prueba.bmp_width 20
+#define prueba.bmp_height 20
+static unsigned char prueba.bmp_bits[] = {
+   0x00, 0x00, 0x00, 0x40, 0x00, 0x00, 0xc0, 0x00, 0x00, 0xc0, 0x01, 0x00,
+   0xc0, 0x03, 0x00, 0xc0, 0x07, 0x00, 0xc0, 0x0f, 0x00, 0xc0, 0x1f, 0x00,
+   0xc0, 0x3f, 0x00, 0xc0, 0x7f, 0x00, 0xc0, 0x7f, 0x00, 0xc0, 0x3f, 0x00,
+   0xc0, 0x1f, 0x00, 0xc0, 0x0f, 0x00, 0xc0, 0x07, 0x00, 0xc0, 0x03, 0x00,
+   0xc0, 0x01, 0x00, 0xc0, 0x00, 0x00, 0x40, 0x00, 0x00, 0x00, 0x00, 0x00};
+"""),
+         BitmapImage(name="izquierda", data=r"""
+#define izquierda_width 20
+#define izquierda_height 20
+static unsigned char izquierda_bits[] = {
+   0x00, 0x00, 0x00, 0x00, 0x20, 0x00, 0x00, 0x30, 0x00, 0x00, 0x38, 0x00,
+   0x00, 0x3c, 0x00, 0x00, 0x3e, 0x00, 0x00, 0x3f, 0x00, 0x80, 0x3f, 0x00,
+   0xc0, 0x3f, 0x00, 0xe0, 0x3f, 0x00, 0xe0, 0x3f, 0x00, 0xc0, 0x3f, 0x00,
+   0x80, 0x3f, 0x00, 0x00, 0x3f, 0x00, 0x00, 0x3e, 0x00, 0x00, 0x3c, 0x00,
+   0x00, 0x38, 0x00, 0x00, 0x30, 0x00, 0x00, 0x20, 0x00, 0x00, 0x00, 0x00};
+"""),
+         BitmapImage(name="arriba", data=r"""
+#define arriba_width 20
+#define arriba_height 20
+static unsigned char arriba_bits[] = {
+   0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+   0x00, 0x00, 0x00, 0x00, 0x06, 0x00, 0x00, 0x0f, 0x00, 0x80, 0x1f, 0x00,
+   0xc0, 0x3f, 0x00, 0xe0, 0x7f, 0x00, 0xf0, 0xff, 0x00, 0xf8, 0xff, 0x01,
+   0xfc, 0xff, 0x03, 0xfe, 0xff, 0x07, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+   0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+"""),
+         BitmapImage(name="abajo", data=r"""
+#define abajo_width 20
+#define abajo_height 20
+static unsigned char abajo_bits[] = {
+   0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+   0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xfe, 0xff, 0x07, 0xfc, 0xff, 0x03,
+   0xf8, 0xff, 0x01, 0xf0, 0xff, 0x00, 0xe0, 0x7f, 0x00, 0xc0, 0x3f, 0x00,
+   0x80, 0x1f, 0x00, 0x00, 0x0f, 0x00, 0x00, 0x06, 0x00, 0x00, 0x00, 0x00,
+   0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+"""),
+         BitmapImage(name="principio", data=r"""
+#define principio_width 20
+#define principio_height 20
+static unsigned char principio_bits[] = {
+   0x00, 0x00, 0x00, 0x00, 0x04, 0x01, 0x00, 0x86, 0x01, 0x00, 0xc7, 0x01,
+   0x80, 0xe7, 0x01, 0xc0, 0xf7, 0x01, 0xe0, 0xff, 0x01, 0xf0, 0xff, 0x01,
+   0xf8, 0xff, 0x01, 0xfc, 0xff, 0x01, 0xfc, 0xff, 0x01, 0xf8, 0xff, 0x01,
+   0xf0, 0xff, 0x01, 0xe0, 0xff, 0x01, 0xc0, 0xf7, 0x01, 0x80, 0xe7, 0x01,
+   0x00, 0xc7, 0x01, 0x00, 0x86, 0x01, 0x00, 0x04, 0x01, 0x00, 0x00, 0x00};
+"""),
+         BitmapImage(name="final", data=r"""
+#define final_width 20
+#define final_height 20
+static unsigned char final_bits[] = {
+   0x00, 0x00, 0x00, 0x08, 0x02, 0x00, 0x18, 0x06, 0x00, 0x38, 0x0e, 0x00,
+   0x78, 0x1e, 0x00, 0xf8, 0x3e, 0x00, 0xf8, 0x7f, 0x00, 0xf8, 0xff, 0x00,
+   0xf8, 0xff, 0x01, 0xf8, 0xff, 0x03, 0xf8, 0xff, 0x03, 0xf8, 0xff, 0x01,
+   0xf8, 0xff, 0x00, 0xf8, 0x7f, 0x00, 0xf8, 0x3e, 0x00, 0x78, 0x1e, 0x00,
+   0x38, 0x0e, 0x00, 0x18, 0x06, 0x00, 0x08, 0x02, 0x00, 0x00, 0x00, 0x00};
+""")
+                ]
+
+class visualizadorArbol:
+  tallafuente= 15
+  separah= 20
+  separav= 30
+  bordex= 5
+  bordey= 5
+  fuente= None
+
+  def __init__(self, f):
+    self.padre= f
+    self.balloon= Pmw.Balloon(f)
+    self.canvas= Pmw.ScrolledCanvas(f, canvas_width= 400, canvas_height= 250, canvasmargin= 10)
+    self.canvas.pack(side= TOP, expand= YES, fill= BOTH )
+    if visualizadorArbol.fuente== None:
+      visualizadorArbol.fuente= tkFont.Font(family="Helvetica", size=visualizadorArbol.tallafuente)
+      visualizadorArbol.altofuente= visualizadorArbol.fuente.metrics("linespace")
+      visualizadorArbol.medidor= MideTexto(visualizadorArbol.fuente)
+    self.arbol= None
+    self.anteriores=[]
+
+  def cambia(self, arbol):
+    self.anteriores=[]
+    self.dibuja(arbol)
+
+  def dibuja(self, arbol):
+    cursor=self.padre["cursor"]
+    self.padre["cursor"]="watch"
+    self.borra()
+    self.arbol= arbol
+    arbol.calculaCoordenadas()
+    if len(self.anteriores)!= 0:
+      desp= visualizadorArbol.separav/2
+    else:
+      desp= 0
+    self.hazDibujo(arbol, desp)
+    x= arbol.xraiz+arbol.anchoraiz/2
+    if len(self.anteriores)!= 0:
+      self.canvas.create_line(x, visualizadorArbol.bordey, x, visualizadorArbol.separav/2, fill= "gray")
+    self.canvas.resizescrollregion()
+    self.padre["cursor"]=cursor
+
+  def hazDibujo(self, arbol, y=0):
+    va= visualizadorArbol
+    x1= arbol.xraiz
+    x2= x1+arbol.anchoraiz
+    y1= y
+    y2= y+va.altofuente+2*va.bordey
+    rect= self.canvas.create_rectangle(x1,y1,x2,y2, fill= arbol.fondo)
+    t= self.canvas.create_text((x1+x2)/2, (y1+y2)/2, text= arbol.raiz,
+                               font= va.fuente, fill= arbol.tinta)
+    if arbol.adicional:
+      r=string.join(arbol.adicional,"\n")
+    else:
+      r= "No hay información adicional\npara este nodo."
+    self.balloon.tagbind(self.canvas, rect, r)
+    self.balloon.tagbind(self.canvas, t, r)
+    arbol.rectangulo= rect
+    arbol.texto= t
+    f= lambda x, a= arbol, s= self: s.colapsa(a)
+    self.canvas.tag_bind(rect, "<Button-1>", f, "+")
+    self.canvas.tag_bind(t, "<Button-1>", f, "+")
+    f= lambda x, a= arbol, s= self: s.nuevaRaiz(a)
+    self.canvas.tag_bind(rect, "<Button-3>", f, "+")
+    self.canvas.tag_bind(t, "<Button-3>", f, "+")
+    if arbol.hijos:
+      if not arbol.colapsado:
+        yhijo= y2+va.separav
+        xcentro= (x1+x2)/2
+        for h in arbol.hijos:
+          self.hazDibujo(h, yhijo)
+          self.canvas.create_line(xcentro, y2, h.xraiz+h.anchoraiz/2, yhijo)
+      else:
+        ynueva= y2+va.separav/2
+        xcentro= (x1+x2)/2
+        n=len(arbol.hijos)
+        if n> 1:
+          coef= (x2-x1)/(n-1)
+          orig= x1
+        else:
+          coef= 0
+          orig= xcentro
+        for f in range(n):
+          self.canvas.create_line(xcentro, y2, orig+coef*f, ynueva, fill= "gray")
+
+  def colapsa(self, arbol):
+    arbol.colapsado= not arbol.colapsado
+    self.dibuja(self.arbol)
+
+  def nuevaRaiz(self, arbol):
+    if arbol== self.arbol:
+      if self.anteriores:
+        self.borra()
+        self.arbol= self.anteriores.pop()
+        self.dibuja(self.arbol)
+    else:
+      self.anteriores.append(self.arbol)
+      self.dibuja(arbol)
+
+  def borra(self):
+    for id in self.canvas.find_all():
+      self.canvas.delete(id)
+    return
+
+class MideTexto:
+  def __init__(self, fuente):
+    self.medidacar= {}
+    self.fuente= fuente
+    self.medidapal= {}
+
+  def __call__(self, pal):
+    m= self.medidapal.get(pal, None)
+    if m== None:
+      m= self.fuente.measure(pal)
+      self.medidapal[pal]= m
+    return m
+
+class Arbol:
+  def __init__(self, info):
+    self.colapsado= False
+    if info.fondo== None:
+      self.fondo= "yellow"
+    else:
+      self.fondo= info.fondo
+    if info.tinta== None:
+      self.tinta= "black"
+    else:
+      self.tinta= info.tinta
+    self.raiz= info.raiz[0]
+    self.adicional= info.raiz[1:]
+    self.hijos=[Arbol(h) for h in info.hijos]
+
+  def calculaCoordenadas(self):
+    va= visualizadorArbol
+    self.anchoraiz= va.medidor(self.raiz)+2*va.bordex
+    if self.colapsado or not self.hijos:
+      self.xraiz= 0
+      return ([0],[self.anchoraiz])
+    iz, dch= self.hijos[0].calculaCoordenadas()
+    for h in self.hijos[1:]:
+      iz2, dch2= h.calculaCoordenadas()
+      desplazamiento= self.coloca(dch, iz2)
+      sumadesp= lambda x, i=desplazamiento: x+i
+      iz2= map(sumadesp, iz2)
+      dch2= map(sumadesp, dch2)
+      h.mueve(desplazamiento)
+      iz+= iz2[len(iz):]
+      dch2+= dch[len(dch2):]
+      dch= dch2
+    self.xraiz= (self.hijos[0].xraiz+self.hijos[-1].xraiz+self.hijos[-1].anchoraiz-self.anchoraiz)/2
+    iz= [self.xraiz]+iz
+    dch= [self.xraiz+self.anchoraiz]+dch
+    return iz,dch
+
+  def coloca(self, dcha, izda): # coloca el perfil izda a la derecha de dcha
+    d= dcha[0]+visualizadorArbol.separah-izda[0]
+    l= min(len(dcha), len(izda))
+    for i in range(1,l):
+      if dcha[i]+visualizadorArbol.separah> izda[i]+d:
+        d= dcha[i]+visualizadorArbol.separah-izda[i]
+    return d
+
+  def mueve(self, d):
+    self.xraiz+= d
+    if not self.colapsado:
+      for h in self.hijos:
+        h.mueve(d)
+
+
+  def dot(self):
+    Arbol.netiqueta= 0
+    c= ["digraph vArbol {",
+        "",
+        "rankdir= TB;"
+        "ordering= out;"
+        "node [shape=record];",
+        "edge [dir=none];",
+        ""]
+    self.dentroDot(c)
+    c.append("}\n")
+    return "\n".join(c)
+
+  def dentroDot(self, c):
+    et= Arbol.netiqueta
+    Arbol.netiqueta+= 1
+    if self.adicional:
+      label=('%s | %s' %
+             (self.raiz, "\\n".join([escapa(i) for i in self.adicional])))
+    else:
+      label= str(self.raiz)
+    c.append('%d [label="{ %s }",fontname="Helvetica"];' % (et, label))
+    if not self.colapsado:
+      for h in self.hijos:
+        eth= h.dentroDot(c)
+        c.append('%s-> %s;' % (et, eth))
+    return et
+
+def escapa(cad):
+  cad=cad.replace("\\",r"\\")
+  cad=cad.replace("{",r"\{")
+  cad=cad.replace("|",r"\|")
+  cad=cad.replace("}",r"\}")
+  cad=cad.replace("<",r"\<")
+  cad=cad.replace(">",r"\>")
+  cad=cad.replace('"',r"\"")
+  cad=cad.replace(' ',r"\ ")
+  return cad
+
+
+if len(sys.argv)==1:
+  entrada= ""
+else:
+  entrada= sys.argv[1]
+
+sys.stderr.write("""
+  verArbol %s: a tree visualizer
+  Copyright (C) %s Juan Miguel Vilar
+  verArbol comes with ABSOLUTELY NO WARRANTY; for details
+  see file "gpl.txt".  This is free software, and you are welcome
+  to redistribute it under certain conditions; see file "gpl.txt"
+  for details.
+""" % (version, anyoVersion))
+
+Ventana("verArbol", entrada)

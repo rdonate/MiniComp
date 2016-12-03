@@ -1,0 +1,8 @@
+# Error en el parsing
+# .data aparece dentro de zona .text
+
+	.data
+	.asciiz "hola"
+	.text
+	.data
+	add $r0, $r0, $zero

@@ -1,0 +1,8 @@
+# Error de ejecución
+# El destino del salto no está etiquetado ni es la
+# siguiente instrucción a un jal
+
+	.text
+
+	addi	$r0, $zero, -6
+	jr	$r0

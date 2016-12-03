@@ -1,0 +1,6 @@
+# Error de ejecución
+# Al no llamar a syscall para finalizar, pc fuera de rango
+
+	.text
+
+	fmulti $f0, $fzero, 7.0

@@ -1,0 +1,6 @@
+# Error de ejecución
+# El registro $r0 no contiene ningún valor
+
+	.text
+
+	add $r0, $r0, $zero

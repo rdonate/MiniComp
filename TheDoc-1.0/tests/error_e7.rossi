@@ -1,0 +1,7 @@
+# Error de ejecución
+# Código de llamada al sistema incorrecto
+
+	.text
+
+	addi $sc, $zero, -2
+	syscall

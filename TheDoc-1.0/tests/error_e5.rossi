@@ -1,0 +1,6 @@
+# Error de ejecución
+# Módulo con divisor 0
+
+	.text
+
+	mod $r0, $zero, $zero

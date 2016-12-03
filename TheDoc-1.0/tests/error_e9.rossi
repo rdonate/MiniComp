@@ -1,0 +1,7 @@
+# Error de ejecución
+# No se especifica la posición de la cadena
+
+	.text
+
+	addi $sc, $zero, 5
+	syscall

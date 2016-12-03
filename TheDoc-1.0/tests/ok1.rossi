@@ -1,0 +1,142 @@
+# Programa CORRECTO
+# En este programa se prueban las operaciones aritméticas enteras y reales.
+
+	.data 	# Inicio de la zona de definición de datos
+
+	.asciiz "\n"
+ 	.asciiz 100 "Operaciones con enteros"	
+	.asciiz 200 "Ahora, operaciones con reales"
+
+	.text	# Comienzo del programa
+
+enteros:	
+	jal	nl
+	addi 	$sc, $zero, 2
+	addi 	$a0, $zero, 100
+	syscall
+	jal 	nl
+	jal	nl
+	addi 	$r0, $zero, 5
+	addi 	$r1, $zero, -3
+	addi	$r2, $zero, 12349012345678
+	add	$r3, $r0, $r1		# $r3 = 2
+	addi	$sc, $zero, 0
+	add	$a0, $r3, $zero
+	syscall
+	jal 	nl
+	addi	$r4, $zero, -17		# $r4 = -17
+	addi	$sc, $zero, 0
+	add	$a0, $r4, $zero
+	syscall
+	jal 	nl
+	sub	$r5, $r3, $r1		# $r5 = 5
+	addi	$sc, $zero, 0
+	add	$a0, $r5, $zero
+	syscall
+	jal 	nl
+	subi	$r6, $r4, -17		# $r6 = 0
+	addi	$sc, $zero, 0
+	add	$a0, $r6, $zero
+	syscall
+	jal 	nl
+	mult	$r7, $r4, $zero 	# $r7 = 0
+	addi	$sc, $zero, 0
+	add	$a0, $r7, $zero
+	syscall
+	jal	 nl
+	multi	$r8, $r0, 4		# $r8 = 20
+	addi 	$sc, $zero, 0
+	add 	$a0, $r8, $zero
+	syscall
+	jal 	nl
+	div	$r9, $r8, $r1		# $r9 = -7
+	addi	$sc, $zero, 0
+	add 	$a0, $r9, $zero
+	syscall
+	jal 	nl
+	divi	$r10, $r9, 6		# $r10 = -2
+	addi	$sc, $zero, 0
+	add	$a0, $r10, $zero
+	syscall
+	jal	 nl
+	mod	$r11, $r8, $r9		# $r11 = -1
+	addi	$sc, $zero, 0
+	add	$a0, $r11, $zero
+	syscall
+	jal	 nl
+	modi	$r12, $r8, 7		# $r12 = 6
+	addi	$sc, $zero, 0
+	add	$a0, $r12, $zero
+	syscall
+	jal 	nl
+	not	$r13, $r12		# $r13 = 0
+	addi 	$sc, $zero, 0
+	add	$a0, $r13, $zero
+	syscall
+	jal	nl
+	not	$r14, $r7		# $r14 = 1
+	addi 	$sc, $zero, 0
+	add	$a0, $r14, $zero
+	syscall
+	jal nl
+	j cambio
+reales:	
+	faddi	$f0, $fzero, 5.0e0
+	faddi	$f1, $fzero, -0.003E3
+	faddi	$f2, $fzero, -12345.123445e-123
+	fadd	$f3, $f0, $f1		# $f1 = 2.0
+	addi	$sc, $zero, 1			# Código de escribir real
+	fadd	$fa, $f3, $fzero
+	syscall
+	jal 	nl
+	faddi	$f4, $fzero, 12.5 	# $f4 = 12.5
+	addi	$sc, $zero, 1
+	fadd	$fa, $f4, $fzero
+	syscall
+	jal	 nl
+	fsub	$f5, $f4, $f1		# $f1 = 15.5
+	addi	$sc, $zero, 1
+	fadd	$fa, $f5, $fzero
+	syscall
+	jal 	nl
+	fsubi	$f6, $f5, 0.5		# $f6 = 15.0
+	addi	$sc, $zero, 1
+	fadd	$fa, $f6, $fzero
+	syscall
+	jal 	nl
+	fmult	$f7, $f1, $f6		# $f7 = -45.0
+	addi	$sc, $zero, 1
+	fadd	$fa, $f7, $fzero
+	syscall
+	jal 	nl
+	fmulti	$f8, $f0, 1.5		# $f8 = 7.5
+	addi	$sc, $zero, 1
+	fadd 	$fa, $f8, $fzero
+	syscall
+	jal 	nl
+	fdiv	$f9, $f8, $f2		# $f9 = -6.07e119
+	addi	$sc, $zero, 1
+	fadd	$fa, $f9, $fzero
+	syscall
+	jal 	nl
+	fdivi	$f10, $f7, 4.0		# $f10 = -11.25
+	addi	$sc, $zero, 1
+	fadd	$fa, $f10, $fzero
+	syscall
+	jal 	nl
+	addi 	$sc, $zero, 6
+	syscall				# Fin del programa
+
+	# Esta subrutina imprime un salto de línea
+nl:	addi 	$sc, $zero, 2
+	addi 	$a0, $zero, 0
+	syscall
+	jr 	$ra
+cambio:	jal	nl
+	addi 	$sc, $zero, 2
+	addi 	$a0, $zero, 200
+	syscall
+	jal 	nl
+	jal	nl
+	j 	reales
+	

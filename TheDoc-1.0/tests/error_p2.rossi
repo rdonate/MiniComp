@@ -1,0 +1,9 @@
+# Error en el parsing
+# Directiva .asciiz fuera de zona de declaración de datos
+# Error en el segundo argumento de add
+
+	.asciiz "hola"
+
+	.text
+
+	add	$r0, r0, $zero

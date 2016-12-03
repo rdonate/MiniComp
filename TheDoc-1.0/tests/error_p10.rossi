@@ -1,0 +1,6 @@
+# Error en el parsing
+
+	.text
+
+	j fin	# Etiqueta no definida
+	beq $zero, $zero, fin	# Etiqueta no definida

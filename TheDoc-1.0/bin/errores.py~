@@ -1,0 +1,85 @@
+# -*- coding: latin1 -*- (excepciones
+
+# Representa los errores que surgen durante el análisis; no los errores
+# en tiempo de ejecución
+class Errores:
+  def __init__(self):
+    self.inicializa()
+
+  def inicializa(self):
+    self.e = []
+
+  def dataRep(self, nl):
+    self.e.append("Error línea %4d: sólo puede aparecer una directiva '.data'." % nl)
+
+  def dataDespuesText(self, nl):
+    self.e.append("Error línea %4d: la directiva '.data' debe aparecer antes de la directiva '.text'." % nl)
+
+  def dataSinAsciiz(self, nl):
+    self.e.append("Error línea %4d: la zona de definición de datos está vacía." % nl)
+
+  def textRep(self, nl):
+    self.e.append("Error línea %4d: sólo puede aparecer una directiva '.text'." % nl)
+
+  def asciizError(self, nl):
+    self.e.append("Error línea %4d: la directiva '.asciiz' sólo puede aparecer en la zona de definición de datos." % nl)
+
+  def instrAntesText(self, nl):
+    self.e.append("Error línea %4d: instrucción antes de la directiva '.text'." % nl)
+
+  def finError(self, nl):
+    self.e.append("Error línea %4d: fin de fichero inesperado." % nl)
+    
+  def instrError(self, nl):
+    self.e.append("Error línea %4d: instrucción no válida." % nl)
+
+  def lineaError(self, nl):
+    self.e.append("Error línea %4d: línea incorrecta." % nl)
+
+  def numArgsError(self, nl):
+    self.e.append("Error línea %4d: número de campos incorrecto." % nl)
+
+  def formatoArgsError(self, nl, ins, arg, tipo):
+    self.e.append("Error línea %4d: El %sargumento de la instrucción '%s' debe ser %s." % \
+                   (nl, argumentos[arg], ins, tipos[tipo]))
+
+  def etiqNoDefError(self, et, nl):
+    self.e.append("Error línea %4d: etiqueta '%s' no definida." % (nl,et))
+
+  def etiqRedefError(self, et, nl):
+    self.e.append("Error línea %4d: etiqueta '%s' redefinida." % (nl, et))
+
+# Los siguientes diccionarios ayudan a emitir los mensajes de error
+
+argumentos = { 0: "",
+               1: "primer ",
+	       2: "segundo ",
+	       3: "tercer "
+	     }
+
+tipos = { "r": "un registro entero",
+          "f": "un registro real",
+	  "R": "un inmediato entero",
+	  "F": "un inmediato real",
+	  "e": "una etiqueta",
+	  "n": "un indirecto a registro"
+	}
+
+################################################
+# Errores en tiempo de ejecución (EXCEPCIONES) #
+################################################
+
+SysNoCodError = "El registro $sc no contiene el código de la llamada al sistema."
+SysCodError = "Código de llamada al sistema no válido (%d)."
+SysCharError = "Carácter no válido (%d)."
+SysEnteroError = "El valor introducido no es un entero válido (%s)"
+SysRealError = "El valor introducido no es un real válido (%s)."
+RegVacioError = "El registro %s no contiene ningún valor."
+MemEnteroError = "La posición de memoria %d no contiene un entero."
+MemRealError = "La posición de memoria %d no contiene un real."
+MemAccesoError = "La posición de memoria %d no está inicializada."
+MemDirNegError = "Acceso a una posición de memoria negativa (%d)"
+DivZeroError = "División por cero."
+ModZeroError = "Módulo con divisor cero."
+JDestError = "El destino del salto (línea %d) no es la instrucción posterior\n" + \
+             "a ninguna instrucción jal ni jalr, ni está etiquetado."

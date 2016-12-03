@@ -1,0 +1,7 @@
+# Error en el parsing
+# Instrucción antes de directiva .text
+# Tercer argumento incorrecto
+
+	add 	$r0, $r0, $zero
+	add 	$r0, $r0, zero
+	add 	$r0, $r0, $zero

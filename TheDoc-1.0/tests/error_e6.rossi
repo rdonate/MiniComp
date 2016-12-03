@@ -1,0 +1,6 @@
+# Error de ejecución
+# No se ha especificado código de llamada al sistema
+
+	.text
+
+	syscall

@@ -1,0 +1,7 @@
+# Error de ejecución
+# La posición de memoria no contiene un real
+
+	.text
+
+	sw $zero, 55($zero)
+	flw $f0, 55($zero)

@@ -1,0 +1,84 @@
+# Programa CORRECTO si se introduce el tipo de datos que se solicita
+# En este programa se comprueban las operaciones de entrada y salida
+
+	.data
+
+	.asciiz "Introduce un entero: "
+	.asciiz 30 "Introduce un real: "
+	.asciiz 60 "Introduce la cadena: "
+	.asciiz 90 "¿Qué quieres leer? (0: entero, 1: real, 2: cadena): "
+	.asciiz 150 "Opción incorrecta. Adiós!"
+	.asciiz 200 "\n"
+	.asciiz 202 "Has introducido: "
+
+	.text
+
+	addi	$r0, $zero, 0
+	addi	$r1, $zero, 1
+	addi	$r2, $zero, 2
+	addi	$sc, $zero, 2
+	addi	$a0, $zero, 90
+	syscall
+	addi	$sc, $zero, 3 
+	syscall
+	beq	$a0, $r0, entero
+	beq	$a0, $r1, real
+	beq	$a0, $r2, cadena
+	jal	nl
+	addi	$sc, $zero, 2
+	addi	$a0, $zero, 150
+	syscall
+	j	fin
+entero:
+	jal	nl
+	addi	$sc, $zero, 2
+	addi	$a0, $zero, 0
+	syscall
+	addi	$sc, $zero, 3
+	syscall
+	add	$r0, $a0, $zero	# Entero en $r0
+	addi	$sc, $zero, 2
+	addi	$a0, $zero, 202
+	syscall
+	addi	$sc, $zero, 0
+	add	$a0, $r0, $zero
+	syscall
+	j fin
+real:
+	jal	nl
+	addi	$sc, $zero, 2
+	addi	$a0, $zero, 30
+	syscall
+	addi	$sc, $zero, 4
+	syscall
+	fadd	$f0, $fa, $fzero # Entero en $f0
+	addi	$sc, $zero, 2
+	addi	$a0, $zero, 202
+	syscall
+	addi	$sc, $zero, 1
+	fadd	$fa, $f0, $fzero
+	syscall
+	j fin
+cadena:
+	jal	nl
+	addi	$sc, $zero, 2
+	addi	$a0, $zero, 60
+	syscall
+	# Leemos los 20 primeros caracteres de la cadena, a partir de la posición 300
+	addi	$a0, $zero, 300
+	addi	$a1, $zero, 20
+	addi	$sc, $zero, 5
+	syscall
+	addi	$sc, $zero, 2
+	addi	$a0, $zero, 202
+	syscall
+	addi	$sc, $zero, 2
+	addi	$a0, $zero, 300
+	syscall
+fin:	jal	nl
+	addi	$sc, $zero, 6
+	syscall
+nl:	addi	$sc, $zero, 2
+	addi	$a0, $zero, 200
+	syscall
+	jr	$ra

@@ -1,0 +1,6 @@
+# Error de ejecución
+# División entera por 0
+
+	.text
+
+	div $r0, $zero, $zero

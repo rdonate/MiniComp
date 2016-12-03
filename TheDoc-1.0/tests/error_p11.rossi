@@ -1,0 +1,6 @@
+# Error en el parsing
+# El pc no es accesible para el usuario: primer argumento incorrecto
+
+	.text
+
+	add 	$pc, $zero, $zero

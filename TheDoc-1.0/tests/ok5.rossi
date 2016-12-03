@@ -1,0 +1,9 @@
+# Prueba las instrucciones toint y tofloat
+
+	.text
+
+	addi	$r0, $zero, 7
+	tofloat	$f0, $r0
+	toint	$r1, $f0
+	addi	$sc, $zero, 6
+	syscall

@@ -1,0 +1,40 @@
+# Programa CORRECTO
+# En este programa se prueban las operaciones de carga y almacenamiento
+
+	.data 	# Inicio de la zona de definición de datos
+	
+	.asciiz 100 "\n"
+
+	.text
+
+inicio:	
+	addi	$r0, $zero, 23
+	la	$r1, inicio
+	addi	$r2, $zero, 2
+	sw	$r0, 1($zero)   # Almacena 23 en la posición 1
+	sw	$r1, 0($r2)	# Almacena 9 en la posición 2
+	lw	$r3, 1($zero)
+	lw	$r4, 2($zero)
+	addi	$sc, $zero, 0
+	add	$a0, $r3, $zero
+	syscall
+	jal 	nl
+	addi	$sc, $zero, 0
+	add	$a0, $r4, $zero
+	syscall
+	jal 	nl
+	faddi	$f0, $fzero, 23.0
+	fsw	$f0, 0($zero)	# Almacena 23.0 en la posición 0
+	flw	$f1, 0($zero)
+	addi	$sc, $zero, 1
+	fadd	$fa, $f1, $fzero
+	syscall
+	jal	nl
+	addi 	$sc, $zero, 6
+	syscall
+nl:	addi $sc, $zero, 2
+	addi $a0, $zero, 100
+	syscall
+	jr $ra
+	
+	

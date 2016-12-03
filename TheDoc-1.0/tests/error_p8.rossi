@@ -1,0 +1,3 @@
+# Error en el parsing
+# Fin de fichero inesperado: debe aparecer la directiva obligatoria .text
+# y al menos una instrucción

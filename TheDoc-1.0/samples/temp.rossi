@@ -1,0 +1,29 @@
+# Lee la temperatura en grados Celsius y la convierte en grados Fahrenheit
+
+	.data
+
+	.asciiz "Introduce la temperatura (grados Celsius): "
+	.asciiz 50 "La temperatura en grados Fahrenheit es "
+	.asciiz 100 "\n"
+
+	.text
+
+	addi	$sc, $zero, 2
+	addi	$a0, $zero, 0
+	syscall			# Solicita la temperatura
+	addi	$sc, $zero, 4	 
+	syscall			# Lee un real en $fa
+	fmulti	$f0, $fa, 9.0	# Para convertir, multiplicar por 9
+	fdivi	$f0, $f0, 5.0	# dividir por 5 y
+	faddi	$f0, $f0, 32.0  # sumar 32
+	addi	$sc, $zero, 2
+	addi	$a0, $zero, 50
+	syscall
+	addi	$sc, $zero, 1
+	fadd	$fa, $f0, $fzero
+	syscall			# Imprimime el resultado
+	addi	$sc, $zero, 2
+	addi	$a0, $zero, 100
+	syscall			# Imprime salto de línea
+	addi 	$sc, $zero, 6
+	syscall			# Fin del programa

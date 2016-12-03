@@ -1,0 +1,6 @@
+# Error de ejecución
+# La posición de memoria está vacía
+
+	.text
+
+	flw	$f0, 1024($zero)

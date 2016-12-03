@@ -1,0 +1,6 @@
+# Error de ejecución
+# El registro $f0 no contiene ningún valor
+
+	.text
+
+	fadd $f0, $f0, $fzero

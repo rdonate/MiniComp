@@ -1,0 +1,8 @@
+# Error en el parsing
+
+	.text
+	
+	suma	$r0, $r1, $r2 	# Instrucción no válida
+	add   	$r0  $r1, $r2	# Línea incorrecta
+	add	$r0, $r1  $r2	# Línea incorrecta
+	add			# Número de campos incorrecto

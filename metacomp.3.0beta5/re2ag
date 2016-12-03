@@ -1,0 +1,412 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+##############################################################################
+#
+# re2ag 0.1: a visualizer for regular expressions and automata
+# Copyright (C) 2010 Juan Miguel Vilar
+#                    Universitat Jaume I, Castelló (Spain)
+#
+# This program is free software; you can redistribute it and/or
+#  modify it under the terms of the GNU General Public License
+#  as published by the Free Software Foundation; either version 2
+#  of the License, or (at your option) any later version.
+#
+#  This program is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU General Public License for more details.
+#
+#  You should have received a copy of the GNU General Public License
+#  along with this program; if not, write to the Free Software
+#  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+#
+#  Any questions regarding this software should be directed to:
+#
+#   Juan Miguel Vilar
+#   Departament de Llenguatges i Sistemes Informàtics
+#   Universitat Jaume I
+#   E12071 Castellón (SPAIN)
+#
+#   email: jvilar@lsi.uji.es
+#
+##############################################################################
+#
+# File: re2ag
+#
+# A graphic frontend for regular expressions.
+#
+
+from subprocess import Popen, PIPE
+from Tkinter import *
+import sys
+import tkFileDialog, tkMessageBox
+
+from mc_libs import dotParser, erNodes, REParser, re2a, automaton
+
+_errorColor = "red"
+_okColor = "green"
+_dontCareColor = "gray"
+_normalBackground = "white"
+
+_statusOK = "OK"
+_statusError = "Error"
+_statusNeutral = "Neutral"
+
+def bool2Status(b):
+    return b and _statusOK or _statusError
+
+def okNotNone(n):
+    return n != None and _statusOK or _statusError
+
+class Window:
+    def __init__(self, root, viewModel):
+        self.root = root
+        self.root.protocol("WM_DELETE_WINDOW", self.exit)
+        self.exitRequested = Notification()
+        self.postScriptRequested = Notification()
+        self.connectViewModel(viewModel)
+        self.createWidgets()
+        self.expressionEntry.focus()
+        self.viewModel.refresh()
+
+    def connectViewModel(self, viewModel):
+        self.viewModel = viewModel
+        viewModel.updateExpressionStatus += self.updateExpressionStatus
+        viewModel.updateTextStatus += self.updateTextStatus
+        viewModel.updateAutomatonStatus += self.updateAutomatonStatus
+        viewModel.clearAutomatonDrawing += self.clearAutomatonDrawing
+        viewModel.drawAutomaton += self.drawAutomaton
+        viewModel.drawParse += self.drawParse
+        viewModel.clearParse += self.clearParse
+        viewModel.notifyError += self.notifyError
+        self.exitRequested += viewModel.onExitRequested
+        self.postScriptRequested += viewModel.onPostScriptRequested
+
+    def createWidgets(self):
+        f = Frame(self.root)
+
+        row = 0
+        Label(f, text = "Expression:", anchor = W).grid(row = row, column = 0, sticky = W)
+        self.expressionEntry = Entry(f, textvariable = self.viewModel.expression)
+        self.expressionEntry.grid(row = row, column = 1, sticky = EW)
+
+        row += 1
+        Label(f, text = "Text:", anchor = W).grid(row = row, column = 0, sticky = EW)
+        self.textEntry = Entry(f, textvariable = self.viewModel.text)
+        self.textEntry.grid(row = row, column = 1, sticky = EW)
+
+        row += 1
+        Label(f, text = "Automaton:", anchor = W).grid(row = row, column = 0, sticky = NW)
+        fAutomaton = Frame(f, relief = SUNKEN, borderwidth = 2)
+        self.automatonCanvas = Canvas(fAutomaton, background = _dontCareColor, relief = RIDGE)
+        self.automatonCanvas.grid(row = 0, column = 0, sticky = N+W+S+E)
+        self.hscroll = Scrollbar(fAutomaton, orient = HORIZONTAL, command = self.automatonCanvas.xview )
+        self.hscroll.grid(row = 1, column = 0, sticky = E + W)
+        self.automatonCanvas.configure(xscrollcommand = self.hscroll.set)
+        self.vscroll = Scrollbar(fAutomaton, orient = VERTICAL, command = self.automatonCanvas.yview )
+        self.vscroll.grid(row = 0, column = 1, sticky = N + S)
+        self.automatonCanvas.configure(yscrollcommand = self.vscroll.set)
+
+        fAutomaton.rowconfigure(0, weight = 1)
+        fAutomaton.columnconfigure(0, weight = 1)
+        fAutomaton.grid(row = row, column = 1, sticky = N+W+S+E)
+        f.rowconfigure(row, weight = 1)
+
+        row += 1
+        fButtons = Frame(f)
+        Label(fButtons, text = "States:").pack(side = LEFT)
+        Label(fButtons, textvar = self.viewModel.numStates).pack(side = LEFT)
+        Label(fButtons, text = "Arcs:").pack(side = LEFT)
+        Label(fButtons, textvar = self.viewModel.numArcs).pack(side = LEFT)
+        Checkbutton(fButtons, text = "Show items", variable = self.viewModel.showItems).pack(side = LEFT)
+        Checkbutton(fButtons, text = "Show parse", variable = self.viewModel.showParse).pack(side = LEFT)
+        Button(fButtons, text = "PS", command = self.postScript).pack(side = LEFT)
+        Button(fButtons, text = "Quit", command = self.exit).pack(side = RIGHT)
+
+        fButtons.grid(row = row, column = 1, sticky = W + E)
+
+        f.columnconfigure(1, weight = 1)
+        f.grid(sticky = NSEW)
+        self.root.columnconfigure(0, weight = 1)
+        self.root.rowconfigure(0, weight = 1)
+        for child in f.winfo_children():
+            child.grid_configure(padx = 2, pady = 2)
+
+    def exit(self):
+        self.exitRequested()
+
+    def postScript(self):
+        filename = tkFileDialog.asksaveasfilename(defaultextension=".ps", title="PostScript file",
+                                                  filetypes = [("PostScript", "*.ps")])
+        if filename != "":
+            self.postScriptRequested(filename)
+
+    def updateExpressionStatus(self, status):
+        if status == _statusError:
+            self.expressionEntry.configure(background = _errorColor)
+        else:
+            self.expressionEntry.configure(background = _normalBackground)
+
+    def updateTextStatus(self, status):
+        if status == _statusNeutral:
+            self.textEntry.configure(background = _dontCareColor)
+        elif status == _statusError:
+            self.textEntry.configure(background = _errorColor)
+        else:
+            self.textEntry.configure(background = _okColor)
+
+    def updateAutomatonStatus(self, status):
+        if status == _statusError:
+            self.automatonCanvas.configure(background = _dontCareColor)
+        else:
+            self.automatonCanvas.configure(background = _normalBackground)
+
+    def clearAutomatonDrawing(self):
+        for id in self.automatonCanvas.find_all():
+            self.automatonCanvas.delete(id)
+
+    def drawAutomaton(self, automaton, showLabels):
+        self.clearAutomatonDrawing()
+        for id in self.automatonCanvas.find_all():
+            self.automatonCanvas.delete(id)
+        automaton.draw(self.automatonCanvas, showLabels)
+        self.automatonCanvas.configure(scrollregion = self.automatonCanvas.bbox(ALL))
+
+    def clearParse(self, automaton):
+        automaton.clearParse(self.automatonCanvas)
+
+    def drawParse(self, automaton, string):
+        automaton.drawParse(string, self.automatonCanvas)
+
+    def notifyError(self, message):
+        tkMessageBox.showError("Error", message)
+
+class ViewModel:
+    def __init__(self):
+        self.expression = StringVar()
+        self.expression.trace_variable("w", self.onExpressionUpdated)
+        self.text = StringVar()
+        self.text.trace_variable("w", self.onTextUpdated)
+        self.showItems = IntVar()
+        self.showItems.trace_variable("w", self.onShowItemsUpdated)
+        self.showParse = IntVar()
+        self.showParse.trace_variable("w", self.onShowParseUpdated)
+        self.numStates = StringVar()
+        self.numArcs = StringVar()
+
+        self.automaton = None
+        self.updateTextStatus = Notification()
+        self.updateExpressionStatus = Notification()
+        self.updateAutomatonStatus = Notification()
+        self.clearAutomatonDrawing = Notification()
+        self.drawAutomaton = Notification()
+        self.drawParse = Notification()
+        self.clearParse = Notification()
+        self.notifyError = Notification()
+
+    def refresh(self):
+        self.refreshExpressionStatus()
+        self.refreshTextStatus()
+        self.refreshAutomatonDrawing()
+        self.refreshParse()
+
+    def onExpressionUpdated(self, name, index, access):
+        self.refreshExpressionStatus()
+        self.refreshTextStatus()
+
+    def onTextUpdated(self, name, index, access):
+        self.refreshTextStatus()
+
+    def onShowItemsUpdated(self, name, index, access):
+        self.refreshAutomatonDrawing()
+        self.refreshParse()
+
+    def onShowParseUpdated(self, name, index, access):
+        self.refreshParse()
+
+    def onExitRequested(self):
+        sys.exit(0)
+
+    def onPostScriptRequested(self, filename):
+        if self.automaton == None:
+            return
+        try:
+            psFile = file(filename, "w")
+        except:
+            self.notifyError("Error opening file %s for writing" % filename)
+            return
+        dotProcess = Popen(["dot -Tps"], shell=True, stdin = PIPE, stdout = psFile, stderr = PIPE, close_fds = True)
+        prologue = [ 'size = "11, 8";', 'label = "%s";' % automaton.escapeDot(self.expression.get()) ]
+        dotInfo = self.automaton.toDot(self.showItems.get(), prologue )
+        (ps, errors) = dotProcess.communicate(dotInfo)
+        if errors != "":
+            self.notifyError("Error from dot:\n%s" % errors)
+
+    def refreshExpressionStatus(self):
+        try:
+            expr = REParser.AnalizadorSintactico(unicode(self.expression.get())).RE.exp
+        except REParser.mc_error_abandonar:
+            expr = None
+        self.updateExpressionStatus(okNotNone(expr))
+        if expr != None:
+            expr = erNodes.Concatenation(expr, erNodes.End()) # Adds a placeholder for the final dot
+            self.updateAutomaton(re2a.re2a(expr))
+        else:
+            self.updateAutomaton(None)
+
+    def refreshTextStatus(self):
+        if self.automaton == None:
+            self.updateTextStatus(_statusNeutral)
+        else:
+            self.updateTextStatus(bool2Status(self.automaton.deterministicParse(self.text.get())))
+            self.refreshParse()
+
+    def updateAutomaton(self, automaton):
+        if automaton != None:
+            self.automaton = DrawableAutomaton(automaton)
+            self.automaton.notifyError += self.notifyError
+            self.numStates.set(automaton.numStates())
+            self.numArcs.set(automaton.numArcs())
+        else:
+            self.automaton = None
+            self.numStates.set(0)
+            self.numArcs.set(0)
+        self.refreshAutomatonDrawing()
+
+    def refreshAutomatonDrawing(self):
+        self.updateAutomatonStatus(okNotNone(self.automaton))
+        if self.automaton != None:
+            self.drawAutomaton(self.automaton, self.showItems.get())
+        else:
+            self.clearAutomatonDrawing()
+
+    def refreshParse(self):
+        if self.automaton == None:
+            return
+        if self.showParse.get() == 0:
+            self.clearParse(self.automaton)
+        else:
+            self.drawParse(self.automaton, self.text.get())
+
+class Notification:
+    """To simulate delegates"""
+    def __init__(self):
+        self._associates= []
+
+    def __iadd__(self, f):
+        self._associates.append(f)
+        return self
+
+    def __isub__(self, f):
+        self._associates.remove(f)
+        return self
+
+    def __call__(self, *args):
+        self.invoke(*args)
+
+    def invoke(self, *args):
+        """Calls the associated methods with the given parameters"""
+        for f in self._associates:
+            f(*args)
+
+class DrawableAutomaton:
+    _ttag= "traversed"
+
+    def __init__(self, base):
+        self.base = base
+        self.notifyError = Notification()
+
+    def draw(self, canvas, showItems):
+        dotProcess = Popen(["dot"], shell=True, stdin = PIPE, stdout = PIPE, stderr = PIPE, close_fds = True)
+        (layout, errors) = dotProcess.communicate(self.toDot(showItems).encode("utf8"))
+        if errors != "":
+            self.notifyError("Error message from dot:\n%s\n" % errors)
+        graph = dotParser.AnalizadorSintactico(layout.decode("utf8")).Graph
+        self.graphAttributes = graph.graphAttributes
+        self.edgeAttributes = graph.edgeAttributes
+        self.nodeAttributes = graph.nodeAttributes
+        self.edges = graph.edges
+        self.nodes = graph.nodes
+        if self.graphAttributes.has_key("bb"):
+            self.ymax = int(float(self.graphAttributes["bb"].split(",")[3])) + 10
+        else:
+            self.ymax = 200
+        self.edgeIds = None
+
+        for node in self.nodes:
+            id, attr = node
+            if not attr.has_key("label") or attr["label"] != "":
+                x, y = self._splitPair(attr["pos"])
+                if attr.has_key("label"):
+                    canvas.create_text(x, y, text = attr["label"])
+                w2 = self._scaleString(attr["width"])/2
+                h2 = self._scaleString(attr["height"])/2
+                canvas.create_oval(x - w2, y - h2, x + w2, y + h2)
+                if attr.has_key("peripheries") and attr["peripheries"] == 2:
+                    canvas.create_oval(x - w2 - 2, y - h2 - 2, x + w2 + 2, y + h2 + 2)
+        self.edgeIds = {}
+        for edge in self.edges:
+            id1, id2, attr = edge
+            if attr.has_key("label"):
+                x, y = self._splitPair(attr["lp"])
+                canvas.create_text(x, y, text = attr["label"])
+            lines = self._splitLine(attr["pos"])
+            self.edgeIds[(id1, id2)] = canvas.create_line((lines[1:]+lines[:1]), arrow = LAST, smooth = True)
+
+    def deterministicParse(self, string):
+        return self.base.deterministicParse(string)
+
+    def clearParse(self, canvas):
+        canvas.itemconfigure(self._ttag, fill = "black")
+        canvas.dtag(self._ttag, self._ttag)
+
+    def toDot(self, showitems, prologue = None):
+        return self.base.toDot(showitems, prologue)
+
+    def drawParse(self, string, canvas):
+        if self.edgeIds == None:
+            return
+        p = self.base.path(string)
+        if len(p) == len(string) + 1 and self.base.isFinal(p[-1]):
+            color = _okColor
+        else:
+            color = _errorColor
+        self.clearParse(canvas)
+        l = [ "falso" ] + [ "%s" % s for s in p ]
+        for edge in zip(l, l[1:]):
+            id = self.edgeIds[edge]
+            canvas.addtag_withtag(self._ttag, id)
+        canvas.itemconfigure(self._ttag, fill = color)
+
+    def _2canvasCoordinates(self, x, y):
+        return x, self.ymax - y
+
+    def _splitPair(self, p):
+        c = p.strip().split(",")
+        return self._2canvasCoordinates(int(float(c[0])), int(float(c[1])))
+
+    def _splitLine(self, l):
+        l = l.strip()
+        if l.startswith("e,"):
+            l = l[2:]
+        return [ self._splitPair(p) for p in l.split() ]
+
+    def _scaleString(self, s):
+        return int(float(s)*72)
+
+
+if __name__ == "__main__":
+    sys.stderr.write("""
+  re2ag 0.1: a visualizer for regular expressions and automata
+  Copyright (C) 2010 Juan Miguel Vilar
+  verArbol comes with ABSOLUTELY NO WARRANTY; for details
+  see file "gpl.txt".  This is free software, and you are welcome
+  to redistribute it under certain conditions; see file "gpl.txt"
+  for details.
+""")
+
+    r= Tk()
+    r.title("re2ag")
+    m = ViewModel()
+    Window(r, m)
+    r.mainloop()

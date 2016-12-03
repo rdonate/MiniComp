@@ -1,0 +1,97 @@
+metacomp es un metacompilador que genera procesadores de lenguaje a
+partir de un esquema de traducción basado en una gramática RLL(1). La
+distribución se hace bajo GPL.
+
+Ficheros incluidos en esta versión:
+
+  + 00LEEME: este fichero.
+
+  + gpl.txt: el texto de la gpl. Por razones no obvias, debe estar en
+             inglés.
+
+  + metacomp: el ejecutable de metacomp.
+
+  + re2ag : el ejecutable de re2ag.
+
+  + verArbol.py: ejecutable de verArbol.
+
+Directorios:
+
+  + mc_libs: módulos de apoyo a metacomp.
+
+  + doc: documentación en PostScript.
+
+Historia de la versión 2.0:
+
+  + Beta 1: Primera versión utilizable.
+
+  + Beta 2: Añade el diccionario de anulables y corrige algunos bugs,
+       incluyendo el documentado en la primera versión.
+
+  + Beta 3: Corrige el cálculo de primeros y el mensaje de error
+       que se da cuando un no terminal se escribe sin el >.
+
+  + Beta 4: Se hace más robusto el tratamiento de errores. Correcciones
+       menores en la documentación. La lista mc_t de los errores detectados
+       por la clausura pasa a ser la de los aceptables (era la de los
+       siguientes). El tratamiento del error noEOF se utiliza.
+
+Historia de la versión 2.1:
+
+  + Beta 1: Incluye trazas con verArbol.py y mc_abandonar.
+
+Historia de la versión 2.2:
+
+  + Beta 1: mejoras:
+       + Token error en las disyunciones.
+       + Permite crear sólo el analizador léxico.
+       + Permite referirse al último terminal y no terminal mediante _.
+       + Mejores mensajes de error.
+     Cambios:
+       + Los programas sin main, funcionan procesando de sys.stdin.
+
+Historia de la versión 2.3:
+
+  + Beta 1: mejoras:
+       + Preparado para python2.3, se añade comentario para la codificación.
+       + Corregidos algunos bugs en los mensajes.
+       + Corregido un bug en los analizadores léxicos que hacía que fallase con
+         especificaciones en las que el fin de línea puede provocar un error léxico.
+       + Los programas sin main y que sólo generan el analizador léxico funcionan
+         mostrando los componentes leídos.
+
+Historia de la versión 2.4:
+  + Beta 1: mejoras:
+       + Añadida la opción de generar analizadores sintácticos "puros".
+
+  + Beta 2: Corregido un bug cuando se genera sólo el analizador
+         léxico que hacía que no se llamara a main.
+
+Historia de la versión 2.5:
+  + Beta 1: Añade clausuras positivas. Los atributos del símbolo
+         inicial están disponibles en el AnalizadorSintactico. El
+         código de cálculo de primeros y siguientes está reescrito. Se
+         omiten componentes con cat a None. Corregidos algunos problemas
+         de verArbol.
+
+  + Beta 2: Corregido un bug que hacía que una secuencia nunca fuera
+         anulable. Cambiado latin1 por latin-1 en comentarios y en el
+         código generado.
+
+  + Beta 3: Corregido un bug en las categorías con comillas. Añadida la
+         especificación de color a verArbol.
+
+Historia de la versión 3.0:
+  + Beta 1: Movidos los módulos a mc_libs.  Cambiado el generador del
+         analizador léxico para utilizar autómatas. Codificado en utf-8.
+  + Beta 2: Ajustes de la codificación. Añadida la opción -c.
+  + Beta 3: Mas ajustes de la codificación. Añadido el literal () para
+            la cadena vacía. Cambiadas las comprobaciones de los arcos
+            para hacer búsqueda binaria. Cambiadas las opción -c y
+            añadida la opción -C.
+  + Beta 4: Corregido un bug que se manifestaba al mostrar errores de
+            conflictos LL(1) y algunos menores relacionados con la
+            codificación. Modificada la opción muestra. Cambiada
+            la manera de escribir las categorías de un sólo lexema.
+  + Beta 5: Corregida la documentación. Eliminados algunos bugs de
+            codificación. Mejorada la presentación de las tablas.

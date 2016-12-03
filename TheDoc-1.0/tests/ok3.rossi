@@ -1,0 +1,89 @@
+# Programa CORRECTO
+# En este programa se prueban las instrucciones de salto condicional
+# e incondicional
+
+	.data 	# Inicio de la zona de definición de datos
+	
+	.asciiz "Etiqueta "
+	.asciiz 10 "Fin"
+	.asciiz 100 "\n"
+
+	.text
+
+inicio:	
+	addi 	$r0, $zero, 0
+	addi	$r1, $zero, 1
+	# Estos saltos no se toman nunca
+	beq	$r0, $r1, et1
+	bne	$r0, $r0, et1
+	bge	$r0, $r1, et1
+	bgt	$r0, $r1, et1
+	ble	$r1, $r0, et1
+	blt	$r1, $r0, et1
+	faddi	$f0, $fzero, 0.0
+	faddi	$f1, $fzero, 1.0
+	fbeq	$f0, $f1, et1
+	fbne	$f0, $f0, et1
+	fbge	$f0, $f1, et1
+	fbgt	$f0, $f1, et1
+	fble	$f1, $f0, et1
+	fblt	$f1, $f0, et1
+	# Estos saltos se toman siempre
+	addi 	$sc, $zero, 0
+	beq	$r0, $r0, et2
+	addi 	$a0, $zero, 1
+	syscall
+et2:	bne	$r0, $r1, et3
+	addi	$a0, $zero, 2
+	syscall
+et3:	bge	$r1, $r1, et4
+	addi 	$a0, $zero, 3
+	syscall
+et4:	bgt	$r1, $r0, et5
+	addi 	$a0, $zero, 4
+	syscall
+et5:	ble	$r0, $r0, et6
+	addi 	$a0, $zero, 5
+	syscall
+et6:	blt	$r0, $r1, et7
+	addi 	$a0, $zero, 6
+	syscall
+et7:	faddi	$f0, $fzero, 0.0
+	faddi	$f1, $fzero, 1.0
+	fbeq	$f0, $f0, et8
+	addi	$a0, $zero, 7
+	syscall	
+et8:	fbne	$f0, $f1, et9
+	addi	$a0, $zero, 8
+	syscall
+et9:	fbge	$f1, $f1, et10
+	addi 	$a0, $zero, 9
+	syscall
+et10:	fbgt	$f1, $f0, et11
+	addi 	$a0, $zero, 10
+	syscall
+et11:	fble	$f0, $f0, et12
+	addi 	$a0, $zero, 11
+	syscall
+et12:	fblt	$f0, $f1, et13
+	addi	$a0, $zero, 12
+	syscall
+et13:	la 	$r2, ret
+	j 	escribefin
+ret:	addi 	$sc, $zero, 6
+	syscall
+nl:	addi 	$sc, $zero, 2
+	addi	$a0, $zero, 100
+	syscall
+	jr 	$ra
+et1: 	addi 	$sc, $zero, 0
+	addi 	$a0, $zero, 0
+	syscall
+	jal 	nl
+	addi 	$sc, $zero, 6
+	syscall
+escribefin:
+	addi	$sc, $zero, 2
+	addi	$a0, $zero, 10
+	syscall
+	jr	$r2

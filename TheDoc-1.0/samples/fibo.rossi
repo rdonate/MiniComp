@@ -1,0 +1,76 @@
+# Implementación recursiva de la función de Fibonacci.
+# Dado N, calcula fibo(N).
+
+	.data
+
+	.asciiz    "N: "
+	.asciiz 5  "\n"
+	.asciiz 10 "fibo("
+	.asciiz 20 ") = "
+	
+	.text
+
+	addi	$sc, $zero, 2
+	addi	$a0, $zero, 0
+	syscall
+	addi	$sc, $zero, 3
+	syscall
+	add	$r3, $a0, $zero # N en $r3
+	addi	$sp, $zero, 100	# Inicialización del stack pointer
+	addi	$sp, $sp, 1	# Creamos espacio para el resultado
+	sw	$r3, 0($sp)	# Apilamos N
+	addi	$sp, $sp, 1	# Incrementamos el $sp
+	jal	fibo
+	addi	$sc, $zero, 2
+	addi	$a0, $zero, 10
+	syscall
+	addi	$sc, $zero, 0
+	add	$a0, $r3, $zero
+	syscall
+	addi	$sc, $zero, 2
+	addi	$a0, $zero, 20
+	syscall
+	lw	$a0, 0($sp)	# Resultado, de la cima de la pila a $a0
+	addi	$sc, $zero, 0
+	syscall
+	addi	$sc, $zero, 2
+	addi	$a0, $zero, 5
+	syscall
+	addi	$sc, $zero, 6
+	syscall			# exit
+	# La función deberá apilar el valor del registro $r0 para no perder su
+	# valor en sucesivas llamadas recursivas. No es necesario apilar $r1 y $r2
+	# puesto que, en este caso, se usan como temporales.
+fibo:	save	$fp, 0($sp)	# Apilamos el $fp
+	addi	$fp, $sp, 0	# El $fp actual apunta al $fp anterior
+	addi 	$sp, $sp, 1
+	sw	$ra, 0($sp)	# Apilamos la dirección de retorno
+	addi	$sp, $sp, 1
+	save	$r0, 0($sp)	# Salvamos el contenido del registro $r0
+	addi	$sp, $sp, 1
+	lw	$r0, -1($fp)	# N en $r0
+	addi	$r1, $zero, 1
+	ble	$r0, $r1, uno	# Si N <= 1 saltamos a "uno"
+	# Llamamos a fibo(n-1)
+	addi	$sp, $sp, 1	# Creamos espacio para el resultado
+	subi	$r2, $r0, 1	# $r2 = N-1
+	sw	$r2, 0($sp)	
+	addi	$sp, $sp, 1
+	jal	fibo
+	# Llamamos a fibo(n-2)
+	subi	$r2, $r0, 2	# $r2 = N-2
+	lw	$r0, 0($sp)	# $r0 = fibo(n-1)
+	addi	$sp, $sp, 1
+	sw	$r2, 0($sp)
+	addi	$sp, $sp, 1
+	jal	fibo
+	lw	$r2, 0($sp)	# $r2 = fibo(n-2)
+	add	$r0, $r0, $r2	# $r0 = fibo(n-1) + fibo(n-2)
+	sw	$r0, -2($fp)
+	j	fin
+uno:	sw	$r1, -2($fp)	# Devolvemos un 1
+fin:	subi	$sp, $sp, 5	# Restauramos el $sp (apunta al resultado)
+	lw	$ra, 1($fp)	# Restauramos la dirección de retorno
+	rest	$r0, 4($sp)	# Restauramos el registro $r0
+	rest	$fp, 2($sp)	# Restauramos el $fp
+	jr	$ra

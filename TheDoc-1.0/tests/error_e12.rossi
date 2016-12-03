@@ -1,0 +1,6 @@
+# Error de ejecución
+# Acceso a posición de memoria negativa
+
+	.text
+
+	fsw $fzero, -2($zero)

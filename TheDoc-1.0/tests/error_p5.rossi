@@ -1,0 +1,7 @@
+# Error en el parsing
+# .text aparece repetida
+# Error en el tercer agumento de add
+
+	.text
+	add $r0, $r0, $0
+	.text

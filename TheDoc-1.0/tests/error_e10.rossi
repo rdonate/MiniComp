@@ -1,0 +1,6 @@
+# Error de ejecución
+# La posición de memoria está vacía
+
+	.text
+
+	lw	$r0, 37($zero)

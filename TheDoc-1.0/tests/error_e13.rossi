@@ -1,0 +1,7 @@
+# Error de ejecución
+# La posición de memoria no contiene un entero
+
+	.text
+
+	fsw $fzero, 25($zero)
+	lw $r0, 25($zero)
