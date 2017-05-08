@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 class BancoRegistros:
   def __init__(self):
     self.libres= []  # Registros ya liberados

@@ -1,9 +1,9 @@
-# -*- coding: latin1 -*-
+# -*- coding: utf-8 -*-
 
 from string import *
 from Rossi import *
 try:
-  import readline 	# AÒade historia de comandos, soporte , etc.
+  import readline 	# A√±ade historia de comandos, soporte , etc.
 except:
   pass
 
@@ -36,23 +36,23 @@ class Text:
 		     "help"      : self.help,
 		     "exit"      : self.exit
 		   }
-    self.brkUsado = 0 # Indica si la m·quina ya se ha detenido en el BRK actual
-    # AÒadimos a las Ûrdenes existentes las Ûrdenes abreviadas
+    self.brkUsado = 0 # Indica si la m√°quina ya se ha detenido en el BRK actual
+    # A√±adimos a las √≥rdenes existentes las √≥rdenes abreviadas
     for cmd in self.ordenes.keys():
       for i in range(len(cmd)-1):
-        if self.ordenes.has_key(cmd[:i+1]): # Si el prefijo ya est· aÒadido
+        if self.ordenes.has_key(cmd[:i+1]): # Si el prefijo ya est√° a√±adido
 	  self.ordenes[cmd[:i+1]] = self.prefijoAmbiguo
 	else:
 	  self.ordenes[cmd[:i+1]] = self.ordenes[cmd]
     # Si tenemos que ejecutarlo en modo batch y no se ha especificado
-    # ning˙n fichero, leemos de la entrada est·ndar
+    # ning√∫n fichero, leemos de la entrada est√°ndar
     if batch and not fich:
       fich = "stdin"
     # Si se ha especificado el fichero, lo cargamos ya
     if fich:
       self.load(fich)
     if batch:
-      # Si no hay ning˙n error de an·lisis y se ha leÌdo un fichero, lo ejecutamos "de tirÛn"
+      # Si no hay ning√∫n error de an√°lisis y se ha le√≠do un fichero, lo ejecutamos "de tir√≥n"
       if not self.rossi.err.e and self.lineas:
         self.execute()
     else:
@@ -62,8 +62,8 @@ class Text:
     print "El prefijo introducido es ambiguo!"
 
   def mainloop(self):
-    print "Bienvenido a TheDoc: un emulador para la m·quina virtual ROSSI."
-    print "Escribe 'help' para mostrar las Ûrdenes disponibles."
+    print "Bienvenido a TheDoc: un emulador para la m√°quina virtual ROSSI."
+    print "Escribe 'help' para mostrar las √≥rdenes disponibles."
     while 1:
       try:
         c = raw_input(">> ")
@@ -84,7 +84,7 @@ class Text:
       else:
         print "Orden incorrecta: %s." % repr(l[0])
     except TypeError:
-      print "N˙mero de argumentos incorrecto."
+      print "N√∫mero de argumentos incorrecto."
     except ValueError:
       print "Argumentos con formato incorrecto."
 
@@ -117,7 +117,7 @@ class Text:
     
   def reload(self):
     if not self.recargable:
-      print "Imposible recargar fichero: no hay ning˙n fichero cargado."
+      print "Imposible recargar fichero: no hay ning√∫n fichero cargado."
     else:
       self.pasos = 0
       self.brkUsado = 0
@@ -145,13 +145,13 @@ class Text:
     if self.rossi.programa:
       if self.rossi.estado == Rossi.FUNCIONANDO:
         self.pasos += 1
-      # Si est· activado el modo verboso, muestro la instrucciÛn que se va a ejecutar
+      # Si est√° activado el modo verboso, muestro la instrucci√≥n que se va a ejecutar
       if self.verboso:
         self.program(self.rossi.pc, self.rossi.pc)
       self.rossi.ejecutaPaso()
       if self.rossi.NOP == 1:
-        self.pasos -= 1 # La ejecuciÛn de nop no se tiene en cuenta
-      # Si est· activado el modo verboso, mostramos quÈ se ha actualizado
+        self.pasos -= 1 # La ejecuci√≥n de nop no se tiene en cuenta
+      # Si est√° activado el modo verboso, mostramos qu√© se ha actualizado
       if self.verboso:
         if self.rossi.re.cambios:
           print self.rossi.re.ultReg + " " * (7 - len(self.rossi.re.ultReg)) + ": " + str(self.rossi.re.ultValor)
@@ -163,26 +163,26 @@ class Text:
 	  else:
 	   for i in range(self.rossi.ASCIIZ_POS, self.rossi.mem.ultDir+1):
 	     print "Memoria [%d] : " % i, self.rossi.mem.m[i]
-      if self.rossi.estado == Rossi.ERROR: # Ha habido un error de ejecuciÛn
-        print "M¡QUINA DETENIDA !!!"
-        print "ERROR DE EJECUCI”N: %s" % self.rossi.error_msg
+      if self.rossi.estado == Rossi.ERROR: # Ha habido un error de ejecuci√≥n
+        print "M√ÅQUINA DETENIDA !!!"
+        print "ERROR DE EJECUCI√ìN: %s" % self.rossi.error_msg
         print "PC: %d" % self.rossi.pc
       elif self.rossi.estado == Rossi.PARADO:
-        if not self.clean: # Podemos imprimir estadÌsticas
-	  print "\n[ EjecuciÛn finalizada ]"
+        if not self.clean: # Podemos imprimir estad√≠sticas
+	  print "\n[ Ejecuci√≥n finalizada ]"
 	  print "REPG usados: %3d" % (len(self.rossi.re.r.keys()) - 7)
 	  print "RRPG usados: %3d" % (len(self.rossi.rr.r.keys()) - 2)
 	  print "Pasos: %d" % self.pasos
 	else:
-	  # Imprimimos informaciÛn adicional por la salida de error est·ndar
-	  sys.stderr.write("\n[ EjecuciÛn finalizada ]\n")
+	  # Imprimimos informaci√≥n adicional por la salida de error est√°ndar
+	  sys.stderr.write("\n[ Ejecuci√≥n finalizada ]\n")
 	  sys.stderr.write("REPG usados: %3d\n" % (len(self.rossi.re.r.keys()) - 7))
 	  sys.stderr.write("RRPG usados: %3d\n" % (len(self.rossi.rr.r.keys()) - 2))
 	  sys.stderr.write("Pasos: %d\n" % self.pasos)
     else:
-      print "No se ha cargado ning˙n programa correcto."
+      print "No se ha cargado ning√∫n programa correcto."
     
-  # SÛlo se detiene en un break la primera vez que lo encuentra
+  # S√≥lo se detiene en un break la primera vez que lo encuentra
   def execute(self):
     if self.rossi.programa:
       while 1:
@@ -196,7 +196,7 @@ class Text:
         if self.rossi.estado != Rossi.FUNCIONANDO:
           break
     else:
-      print "No se ha cargado ning˙n programa correcto."
+      print "No se ha cargado ning√∫n programa correcto."
 
   def breakpoint(self, linea=None):
     if linea == None: # Mostramos los breakpoints definidos
@@ -210,25 +210,25 @@ class Text:
       if self.breakpoints.has_key(linea): # Si existe, lo eliminamos
         del self.breakpoints[linea]
       else:
-        self.breakpoints[linea] = "" # Si no, lo aÒadimos
+        self.breakpoints[linea] = "" # Si no, lo a√±adimos
     else:
-      print "N˙mero de lÌnea fuera de rango."
+      print "N√∫mero de l√≠nea fuera de rango."
 
   def program(self, start=0, end=None):
     if end == None:
       end = len(self.lineas)
     start = long(start)
     end = long(end)
-    p = self.lineas[start:end+1] # LÌneas que debemos mostrar
-    nl = start # Indica el n˙mero de lÌnea en el que estamos
+    p = self.lineas[start:end+1] # L√≠neas que debemos mostrar
+    nl = start # Indica el n√∫mero de l√≠nea en el que estamos
     for i in p:
       if i[-1] == "\n":
-        i = i[:-1] # Eliminamos el salto de lÌnea
-      if nl == self.rossi.pc: # Si es la siguiente instrucciÛn a ejecutar, la marcamos
+        i = i[:-1] # Eliminamos el salto de l√≠nea
+      if nl == self.rossi.pc: # Si es la siguiente instrucci√≥n a ejecutar, la marcamos
         print "*",
       else:
         print " ",
-      if self.breakpoints.has_key(str(nl)): # Si la lÌnea tiene un brk, lo marcamos
+      if self.breakpoints.has_key(str(nl)): # Si la l√≠nea tiene un brk, lo marcamos
         print " BRK",
       else:
         print "    ",
@@ -254,7 +254,7 @@ class Text:
     num = []
     for i in keys:
       if i[1] == "r" and i != "$ra":
-        num.append(long(i[2:])) # num contiene los n˙meros de los reg. de prop. gral.
+        num.append(long(i[2:])) # num contiene los n√∫meros de los reg. de prop. gral.
     num.sort()
     rdo = []
     for i in num:
@@ -326,7 +326,7 @@ class Text:
      self.rossi.inicializa()
      self.pasos = 0
      self.brkUsado = 0
-     #self.breakpoints = {} # No eliminamos los breakpoints al resetar la m·quina
+     #self.breakpoints = {} # No eliminamos los breakpoints al resetar la m√°quina
 
   def verbose(self):
     if self.verboso:
@@ -338,25 +338,25 @@ class Text:
 
   def help(self):
     print "load file       : carga el fichero 'file'."
-    print "reload          : recarga el ˙ltimo fichero cargado."
-    print "step            : avanza un paso en la ejecuciÛn del programa."
+    print "reload          : recarga el √∫ltimo fichero cargado."
+    print "step            : avanza un paso en la ejecuci√≥n del programa."
     print "execute         : ejecuta el programa hasta el final o hasta encontrar un error "
     print "                  o un breakpoint."
-    print "breakpoint [n]  : alterna un breakpoint en la lÌnea n o muestra los breakpoints "
+    print "breakpoint [n]  : alterna un breakpoint en la l√≠nea n o muestra los breakpoints "
     print "                  definidos."
-    print "program [n [m]] : muestra el programa desde la lÌnea n hasta m."
-    print "memory [n [m]]  : muestra el contenido de la memoria, desde la posiciÛn n hasta "
+    print "program [n [m]] : muestra el programa desde la l√≠nea n hasta m."
+    print "memory [n [m]]  : muestra el contenido de la memoria, desde la posici√≥n n hasta "
     print "                  la m."
-    print "integers [n [m]]: muestra el contenido de los registros enteros de propÛsito ge-"
+    print "integers [n [m]]: muestra el contenido de los registros enteros de prop√≥sito ge-"
     print "                  neral desde el registro $rn hasta el $rm."
-    print "reals [n [m]]   : muestra el contenido de los registros reales de propÛsito ge-"
+    print "reals [n [m]]   : muestra el contenido de los registros reales de prop√≥sito ge-"
     print "                  neral desde el registro $fn hasta el $fm."
-    print "spints          : muestra el contenido de los registros enteros de propÛsito es-"
-    print "                  pecÌfico."
-    print "spreals         : muestra el contenido de los registros reales de propÛsito es-"
-    print "                  pecÌfico."
+    print "spints          : muestra el contenido de los registros enteros de prop√≥sito es-"
+    print "                  pec√≠fico."
+    print "spreals         : muestra el contenido de los registros reales de prop√≥sito es-"
+    print "                  pec√≠fico."
     print "verbose         : alterna la verbosidad."
-    print "reset           : inicializa la m·quina, manteniendo cargado el programa actual."
+    print "reset           : inicializa la m√°quina, manteniendo cargado el programa actual."
     print "help            : muestra este mensaje."
     print "exit            : sale del emulador."
   

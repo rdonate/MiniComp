@@ -1,4 +1,4 @@
-# -*- coding: latin1 -*-
+# -*- coding: utf-8 -*-
 
 from Tkinter import *
 import Pmw
@@ -7,7 +7,7 @@ from Rossi import *
 from string import expandtabs
 import types
 
-# Interfaz del emulador en modo gr·fico
+# Interfaz del emulador en modo gr√°fico
 
 release = "1.0"
 
@@ -22,8 +22,8 @@ class Menu:
     self.wgt.addmenuitem("File", "command", command=sys.exit, label="Exit")
     self.wgt.addmenu("About", None, side=RIGHT)
     self.wgt.addmenuitem("About", "command", command=parent.about, label="About TheDoc")
-    self.file = self.wgt.component("File-menu")	  # Men˙ File
-    self.about = self.wgt.component("About-menu") # Men˙ About
+    self.file = self.wgt.component("File-menu")	  # Men√∫ File
+    self.about = self.wgt.component("About-menu") # Men√∫ About
    
 class Program:
   def __init__(self, parent):
@@ -65,20 +65,20 @@ class Program:
     nl = 0
     for l in lineas:
       if l[-1] == "\n":
-        l = l[:-1]  # Eliminamos el salto de lÌnea
+        l = l[:-1]  # Eliminamos el salto de l√≠nea
       l = expandtabs(l)
       breakP = lambda e, s=self, tag="num%d" % nl, n=nl: Program.breakpoints(s, tag, n)
       self.text.tag_configure("num%d" % nl, foreground=self.numFgColor, background=self.bgColor)
       self.text.tag_configure("lin%d" % nl, foreground=self.linFgColor, background=self.bgColor)
       self.text.insert(AtInsert(), "%4d " % nl, "num%d" % nl)
       self.text.tag_bind("num%d" % nl, "<1>", breakP)
-      self.text.insert(AtInsert(), (l + " " * 80)[:80], "lin%d" % nl) # Para que todas las lineas tengan el mismo tamaÒo
+      self.text.insert(AtInsert(), (l + " " * 80)[:80], "lin%d" % nl) # Para que todas las lineas tengan el mismo tama√±o
       nl += 1
       if nl != len(lineas):
         self.text.insert(AtInsert(), "\n")
     self.text.configure(state=DISABLED, cursor=self.selectCursor)
 
-  # Desmarca la lÌnea correspondiente al viejo PC y marca la nueva
+  # Desmarca la l√≠nea correspondiente al viejo PC y marca la nueva
   def setPc(self, oldPc, newPc):
     self.text.tag_configure("lin%d" % oldPc, background=self.bgColor, foreground=self.linFgColor)
     self.text.tag_configure("lin%d" % newPc, background=self.pcBgColor, foreground="black")
@@ -114,7 +114,7 @@ class Registers:
       keys = self.rr.r.keys()
       pref = "$f"
       value = "%7s: %15f" % (reg, self.rr.ultValor)
-    # Obtenemos el Ìndice del registro: primero los ordenamos numÈricamente
+    # Obtenemos el √≠ndice del registro: primero los ordenamos num√©ricamente
     keynum = []
     for key in keys:
       if key not in ["$zero", "$sp", "$fp", "$ra", "$sc", "$a0", "$a1", "$fzero", "$fa"]:
@@ -124,9 +124,9 @@ class Registers:
     for key in keynum:
       self.local.append(pref + str(key))
     ind = self.local.index(reg) + 1
-    if new: # AÒadimos la lÌnea nueva
+    if new: # A√±adimos la l√≠nea nueva
       self.text.insert("%d.0" % ind, value + "\n")
-    else:	 # Borramos la lÌnea y la aÒadimos modificada
+    else:	 # Borramos la l√≠nea y la a√±adimos modificada
       self.text.delete("%d.0" % ind, "%d.0 lineend" % ind)
       self.text.insert("%d.0" % ind, value) 
     self.text.tag_add("reg", "%d.0" % ind, "%d.0 linestart + 8 char" % ind)
@@ -162,7 +162,7 @@ class Specific(Registers):
     self.text.configure(state=NORMAL)
     self.text.delete("0.0", END)
     for reg in self.spf:
-      ind = self.spf.index(reg) + 1 # Le sumamos 1 porque la primera lÌnea es la 0
+      ind = self.spf.index(reg) + 1 # Le sumamos 1 porque la primera l√≠nea es la 0
       if reg == "*": # Indica que tenemos que dejar un espacio
         lin = "\n"
       elif reg == "$zero":
@@ -177,7 +177,7 @@ class Specific(Registers):
 
   def update(self):
     self.text.configure(state=NORMAL)
-    # Obtenemos el Ìndice del registro que ha cambiado
+    # Obtenemos el √≠ndice del registro que ha cambiado
     if self.re.cambios:
       reg = self.re.ultReg
       val = self.re.ultValor
@@ -218,7 +218,7 @@ class Memory:
 
   def update(self):
     self.text.configure(state=NORMAL)
-    new = self.local.count(self.rossi.mem.ultDir) == 0 # Indica si se trata de una posiciÛn nueva
+    new = self.local.count(self.rossi.mem.ultDir) == 0 # Indica si se trata de una posici√≥n nueva
     self.local = self.rossi.mem.m.keys()
     self.local.sort()
     ind = self.local.index(self.rossi.mem.ultDir) + 1
@@ -232,7 +232,7 @@ class Memory:
         self.text.tag_add("pos", "%d.0 linestart" % ind, "%d.0 linestart + 6 char" % ind)
       else:
         ind = self.local.index(self.rossi.ASCIIZ_POS) + 1
-	inddesp = 0 # Desplazamiento respecto al Ìndice
+	inddesp = 0 # Desplazamiento respecto al √≠ndice
         for pos in range(self.rossi.ASCIIZ_POS, self.rossi.mem.ultDir + 1):
 	  self.text.insert("%d.0" % (ind + inddesp), format % (pos, self.rossi.mem.m[pos]) + "\n")
           self.text.tag_add("pos", "%d.0 linestart" % (ind + inddesp), "%d.0 linestart + 6 char" % (ind + inddesp))
@@ -255,7 +255,7 @@ class Memory:
 
 class Terminal:
   def __init__(self, parent):
-    self.entry = ""	# AquÌ iremos almacenando los caracteres introducidos en una lectura
+    self.entry = ""	# Aqu√≠ iremos almacenando los caracteres introducidos en una lectura
     self.wgt = Pmw.ScrolledText(parent)
     self.wgt._vertScrollbar.configure(width=10)
     self.wgt._horizScrollbar.configure(width=10)
@@ -296,7 +296,7 @@ class Terminal:
   def reset(self):
     self.text.configure(state=NORMAL)
     self.text.delete("0.0", END)
-    self.text.insert(AtInsert(), "Bienvenido a TheDoc: un emulador para la m·quina virtual ROSSI.\n\n", "sys")
+    self.text.insert(AtInsert(), "Bienvenido a TheDoc: un emulador para la m√°quina virtual ROSSI.\n\n", "sys")
     self.text.configure(state=DISABLED)
 
   def showErrors(self, lista):
@@ -429,7 +429,7 @@ class GUI(Frame):
       sys.exit(-1)
     self.fich = fich
     self.rossi.inicializa()
-    self.rossi.cargaPrograma(lineas)  # La m·quina carga y parsea el programa
+    self.rossi.cargaPrograma(lineas)  # La m√°quina carga y parsea el programa
     self.programa.loadCode(lineas) # Mostramos el programa en el ScrolledText
     self.spec.delete()
     self.enableReload()
@@ -449,23 +449,23 @@ class GUI(Frame):
     root.minsize(280, 300)
     root.maxsize(280, 300)
     Label(root, text="\nTheDoc", background="white").pack(side=TOP)
-    Label(root, text="Un emulador para la m·quina virtual ROSSI\n", background="white").pack(side=TOP)
+    Label(root, text="Un emulador para la m√°quina virtual ROSSI\n", background="white").pack(side=TOP)
     self.foto = PhotoImage(file="sun.gif", master=root)
     Label(root, image=self.foto, borderwidth=0).pack(side=TOP)
-    Label(root, text="\nVersiÛn 1.0\n", background="white").pack(side=TOP)
-    Label(root, text="Antonio Vilar S·nchez", background="white").pack(side=TOP)
+    Label(root, text="\nVersi√≥n 1.0\n", background="white").pack(side=TOP)
+    Label(root, text="Antonio Vilar S√°nchez", background="white").pack(side=TOP)
     Label(root, text="2004", background="white").pack(side=TOP)
     root.grab_set()
     
   def step(self, e=None):
     if self.rossi.estado == Rossi.FUNCIONANDO:
       self.pasos += 1
-    oldPc = self.rossi.pc	# El PC que tenÌamos antes de ejecutar un paso en Rossi
+    oldPc = self.rossi.pc	# El PC que ten√≠amos antes de ejecutar un paso en Rossi
     self.rossi.ejecutaPaso()
     self.programa.setPc(oldPc, self.rossi.pc) # Marcamos el nuevo PC
     if self.rossi.NOP == 1:
       self.pasos -= 1
-    self.counter.set(self.pasos) # Mostramos el n˙mero de pasos
+    self.counter.set(self.pasos) # Mostramos el n√∫mero de pasos
     if self.rossi.re.cambios:
       if self.rossi.re.ultReg in ["$zero", "$sp", "$fp", "$ra", "$sc", "$a0", "$a1"]:
         self.spec.update() 
@@ -502,7 +502,7 @@ class GUI(Frame):
       self.onlyStop()
       self.bind("<Return>", self.stop)
       self.step()
-      self.update()  # Redibuja todos los widgets que estÈn pendientes
+      self.update()  # Redibuja todos los widgets que est√©n pendientes
       if self.programa.br.has_key(self.rossi.pc):
         break
       if self.parado:
@@ -517,7 +517,7 @@ class GUI(Frame):
     self.parado = 1
     
   def reset(self):
-    oldPc = self.rossi.pc	# El PC que tenÌamos antes de pulsar reset
+    oldPc = self.rossi.pc	# El PC que ten√≠amos antes de pulsar reset
     self.rossi.inicializa()
     self.pasos = 0
     self.counter.set(self.pasos)
@@ -527,7 +527,7 @@ class GUI(Frame):
     self.spec.reset()
     self.mem.reset()
     self.terminal.reset()
-    #self.programa.delBreaks()		# No eliminamos los breakpoints al resetear la m·quina
+    #self.programa.delBreaks()		# No eliminamos los breakpoints al resetear la m√°quina
     self.programa.setPc(oldPc, self.rossi.pc)
     self.enableButtons()
     self.menu.wgt.enableall()

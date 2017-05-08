@@ -1,4 +1,4 @@
-# -*- coding: latin1 -*-
+# -*- coding: utf-8 -*-
 
 from types import *
 import errores
@@ -9,9 +9,9 @@ class Memoria:
 
   def inicializa(self):
     self.m = {}
-    self.ultDir = -1		# Última dirección modificada
-    self.ultValor = None	# Último valor asignado
-    self.cambios = 0		# Indica si ha habido algún cambio en la memoria
+    self.ultDir = -1		# Ãšltima direcciÃ³n modificada
+    self.ultValor = None	# Ãšltimo valor asignado
+    self.cambios = 0		# Indica si ha habido algÃºn cambio en la memoria
 
   def __setitem__(self, d, v):
     if d < 0:

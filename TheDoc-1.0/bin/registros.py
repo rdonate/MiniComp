@@ -1,4 +1,4 @@
-# -*- coding: latin1 -*-
+# -*- coding: utf-8 -*-
 
 import errores
 
@@ -22,10 +22,10 @@ class Registro:
 class RegEnteros(Registro):
   def inicializa(self):
     self.r = {}
-    self.ultReg = None		# Indica el último registro modificado
-    self.ultValor = None	# Indica el último valor asignado
+    self.ultReg = None		# Indica el Ãºltimo registro modificado
+    self.ultValor = None	# Indica el Ãºltimo valor asignado
     self.cambios = 0		# Indica si ha habido cambios en los registros enteros
-    # Registros específicos enteros
+    # Registros especÃ­ficos enteros
     self.r["$zero"] = 0
     self.r["$sp"] = None
     self.r["$fp"] = None
@@ -37,9 +37,9 @@ class RegEnteros(Registro):
 class RegReales(Registro):
   def inicializa(self):
     self.r = {}
-    self.ultReg = None		# Indica el último registro modificado
-    self.ultValor = None	# Indica el último valor asignado
+    self.ultReg = None		# Indica el Ãºltimo registro modificado
+    self.ultValor = None	# Indica el Ãºltimo valor asignado
     self.cambios = 0		# Indica si ha habido cambios en los registros reales
-    # Registro específicos reales
+    # Registro especÃ­ficos reales
     self.r["$fzero"] = 0.0
     self.r["$fa"] = None

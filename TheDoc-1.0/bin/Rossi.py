@@ -1,4 +1,4 @@
-# -*- coding: latin1 -*-
+# -*- coding: utf-8 -*-
 
 from registros import *
 from memoria import *
@@ -7,27 +7,27 @@ import parser
 import sys
 
 class Rossi:
-  [PARADO, FUNCIONANDO, ERROR] = range(3)  # Estados en los que puede encontrarse la m醧uina
+  [PARADO, FUNCIONANDO, ERROR] = range(3)  # Estados en los que puede encontrarse la m谩quina
   
   def __init__(self):
     self.re = RegEnteros() 	 # Banco de registros enteros
     self.rr = RegReales() 	 # Banco de registros reales
     self.mem = Memoria() 	 # Memoria
-    self.err = errores.Errores() # Gestiona los errores de an醠isis
+    self.err = errores.Errores() # Gestiona los errores de an谩lisis
     self.etiq = {}		 # Almacena las etiquetas definidas etiq["etiqueta"] = num_linea
-    self.refet = {}		 # Para cada et a la que se referencia, se almacena un lista con las l韓eas en que se referencia
-    self.sigsub = []		 # Almacena las l韓eas que son la siguiente a una llamada a subrutina (jal)
-    self.programa = []		 # Contiene tuplas de la forma (instrucci髇, (argumentos))
-    self.pc = 0			 # Contador de programa: apunta siempre a la SIGUIENTE instrucci髇 a ejecutar
+    self.refet = {}		 # Para cada et a la que se referencia, se almacena un lista con las l铆neas en que se referencia
+    self.sigsub = []		 # Almacena las l铆neas que son la siguiente a una llamada a subrutina (jal)
+    self.programa = []		 # Contiene tuplas de la forma (instrucci贸n, (argumentos))
+    self.pc = 0			 # Contador de programa: apunta siempre a la SIGUIENTE instrucci贸n a ejecutar
     self.error_msg = None	 # El error que ha llevado al estado ERROR
-    self.estado = Rossi.PARADO   # Estado en el cual se encuentra la m醧uina
-    self.NOP = 0		 # Indica si la 鷏tima instrucci髇 ejecutada ha sido nop
-    self.ASCIIZ = 0		 # Indica si la 鷏tima instrucci髇 ejecutada ha sido un asciiz
-    self.ASCIIZ_POS = None       # Indica la posici髇 de comienzo de la cadena del asciiz
-    self.entrada = None		 # Determina la funci髇 externa que le proporciona la entrada a la m醧uina
-    self.salida = None		 # Determina la funci髇 externa a la que la m醧uina le proporciona la salida
+    self.estado = Rossi.PARADO   # Estado en el cual se encuentra la m谩quina
+    self.NOP = 0		 # Indica si la 煤ltima instrucci贸n ejecutada ha sido nop
+    self.ASCIIZ = 0		 # Indica si la 煤ltima instrucci贸n ejecutada ha sido un asciiz
+    self.ASCIIZ_POS = None       # Indica la posici贸n de comienzo de la cadena del asciiz
+    self.entrada = None		 # Determina la funci贸n externa que le proporciona la entrada a la m谩quina
+    self.salida = None		 # Determina la funci贸n externa a la que la m谩quina le proporciona la salida
 
-    # Asocia la funci髇 a ejecutar para cada instrucci髇 v醠ida del lenguaje e indica el formato de cada
+    # Asocia la funci贸n a ejecutar para cada instrucci贸n v谩lida del lenguaje e indica el formato de cada
     # uno de sus operandos:
     # r : registro entero
     # f : registro real
@@ -85,7 +85,7 @@ class Rossi:
  		        }
 
   # Inicializa el contenido de los registros, la memoria y los errores y hace que el
-  # PC apunte a la primera instrucci髇. Si existe alg鷑 programa cargado, 閟te se mantiene.
+  # PC apunte a la primera instrucci贸n. Si existe alg煤n programa cargado, 茅ste se mantiene.
   def inicializa(self):
     self.re.inicializa()
     self.rr.inicializa()
@@ -114,7 +114,7 @@ class Rossi:
     self.sigsub = []
     p = parser.Parser(self, lineas)
     p.parsea()
-    # Comprobamos que las etiquetas a las que se referencia est醤 definidas
+    # Comprobamos que las etiquetas a las que se referencia est谩n definidas
     for e in self.refet.keys():
       if not self.etiq.has_key(e):
         for l in self.refet[e]:
@@ -151,7 +151,7 @@ class Rossi:
   # INSTRUCCIONES #
   #################
 
-  # El parser asegura que las etiquetas que aparecen est醤 definidas.
+  # El parser asegura que las etiquetas que aparecen est谩n definidas.
 
   def add(self, rd, rs, rt):
     self.re[rd] = self.re[rs] + self.re[rt]
@@ -365,7 +365,7 @@ class Rossi:
       try:
         dir = self.re["$a0"]
         v = chr(self.mem.getEntero(dir))
-        while v != "\0":	# "\0" es el car醕ter cuyo ascii es 0
+        while v != "\0":	# "\0" es el car谩cter cuyo ascii es 0
           if not self.salida:
             sys.stdout.write(v)
 	  else:
@@ -422,10 +422,10 @@ class Rossi:
     i = 0
     while i < len(lit):
       if lit[i] <> "\\":
-        cad += lit[i]	# Si no es una secuencia de escape, se a馻de sin m醩
+        cad += lit[i]	# Si no es una secuencia de escape, se a帽ade sin m谩s
       else:
         # Estamos ante una secuencia de escape
-	# Miramos el siguiente car醕ter y averiguamos de cu醠 se trata
+	# Miramos el siguiente car谩cter y averiguamos de cu谩l se trata
 	i += 1
 	if lit[i] == "n":
 	  cad += "\n"
@@ -437,11 +437,11 @@ class Rossi:
 	  cad += "\\"
       i += 1
     long_cad = len(cad)
-    if not pos:	# No se ha especificado la posici髇
+    if not pos:	# No se ha especificado la posici贸n
       pos = self.mem.ultDir + 1
     for i in range(long_cad):
       self.mem[pos+i] = ord(cad[i])
-    self.mem[pos+long_cad] = 0	# Finalizamos la cadena con el car醕ter \0
+    self.mem[pos+long_cad] = 0	# Finalizamos la cadena con el car谩cter \0
     self.ASCIIZ = 1
     self.ASCIIZ_POS = pos
   
@@ -449,13 +449,13 @@ class Rossi:
     self.NOP = 1
 
   ########################################
-  # Handlers de los errores de ejecuci髇 #
+  # Handlers de los errores de ejecuci贸n #
   ########################################
   
   def hSysNoCodError(self):
     self.error_msg = errores.SysNoCodErrorMsg
     self.estado = Rossi.ERROR
-    self.pc -= 1	# Si se produce una excepci髇, no avanza el PC
+    self.pc -= 1	# Si se produce una excepci贸n, no avanza el PC
 
   def hSysCodError(self, cod):
     self.error_msg = errores.SysCodErrorMsg % cod

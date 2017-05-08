@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# -*- coding: latin1 -*-
+# -*- coding: utf-8 -*-
 
 import sys
 import getopt
@@ -12,15 +12,15 @@ def uso():
   print "    -b: arranca en modo batch normal."
   print "    -B: arranca en modo batch limpio."
   print "    -t: arranca en modo texto."
-  print "    -g: arranca en modo gr·fico."
+  print "    -g: arranca en modo gr√°fico."
   sys.exit(1)
 
 try:
   optlist, args = getopt.getopt(sys.argv[1:], "hbBtg", [])
 except getopt.GetoptError:
-  print "OpciÛn incorrecta."
+  print "Opci√≥n incorrecta."
   uso()
-modo = "gr·fico"
+modo = "gr√°fico"
 limpio = None
 for op in optlist:
   if op[0] =="-h":
@@ -33,19 +33,19 @@ for op in optlist:
   elif op[0] == "-t":
     modo = "texto"
   elif op[0] == "-g":
-    modo = "gr·fico"
+    modo = "gr√°fico"
 if not args:
   fich = None
 elif len(args) == 1:
   fich = args[0]
 else:
-  print "N˙mero de argumentos incorrecto."
+  print "N√∫mero de argumentos incorrecto."
   uso()
 if modo == "batch":
     text.Text(fich, batch=1, clean=limpio)
 elif modo == "texto":
     text.Text(fich)
-elif modo == "gr·fico":
+elif modo == "gr√°fico":
   try:
     import gui
     gui.GUI(fich)

@@ -1,25 +1,25 @@
-# -*- coding: latin1 -*-
+# -*- coding: utf-8 -*-
 
 import re
 
-# Patrones: todos los grupos son anónimos !!!
+# Patrones: todos los grupos son anÃ³nimos !!!
 p_rege = "\$(?:zero|sp|fp|ra|sc|a0|a1|r[0-9]|r[1-9][0-9]*)"	# Registro entero
 p_regr = "\$(?:fa|fzero|f(?:[0-9]|[1-9][0-9]*))"		# Registro real
-p_ent = "[+-]?[0-9]+"						# Número entero
-p_real = "[+-]?[0-9]+\\.[0-9]+(?:[eE][+-]?[0-9]+)?"		# Número real
+p_ent = "[+-]?[0-9]+"						# NÃºmero entero
+p_real = "[+-]?[0-9]+\\.[0-9]+(?:[eE][+-]?[0-9]+)?"		# NÃºmero real
 p_arg = "[-+)($a-zE0-9.]+"					# Cualquier posible argumento
 
 # Expresiones regulares: se marcan los grupos que interesan
 txt = re.compile(r"[ \t]*\.text[ \t]*(?:#.*)?$")
 dat = re.compile(r"[ \t]*\.data[ \t]*(?:#.*)?$")
 
-# g1: posición; g2: cadena
+# g1: posiciÃ³n; g2: cadena
 asc = re.compile(r"[ \t]*\.asciiz(?:[ \t]+([0-9]+))?" + \
                  r"(?:[ \t]+\"((?:[^\"\t\n\\]|\\[\"tn\\])*)\")" + \
 		 r"[ \t]*(?:#.*)?$")
 
 # et? (ins (a1 (,a2 (,a3)? )? )? )? com?
-# g1: etiqueta; g2: instrucción; g3: arg1; g4: arg2; g5: arg3
+# g1: etiqueta; g2: instrucciÃ³n; g3: arg1; g4: arg2; g5: arg3
 ins = re.compile(r"[ \t]*(?:([a-zA-Z][a-zA-Z0-9]*):[ \t]*)?" + \
                  r"(?:([a-z]+)" + \
 		 r"(?:[ \t]*("+p_arg+")" + \
@@ -86,7 +86,7 @@ class Parser:
 	        self.m.err.instrAntesText(nl)
 	      if mo_instr.group(1): # Def. etiqueta
 		self.m.declaraEtiqueta(mo_instr.group(1), nl)
-	      if mo_instr.group(2): # Instrucción
+	      if mo_instr.group(2): # InstrucciÃ³n
 		hayInstr = 1
 	        codop = mo_instr.group(2)
 		if not self.m.instrucciones.has_key(codop):
@@ -111,7 +111,7 @@ class Parser:
 		      if mo_arg1:
 			arg1 = mo_arg1.group(1)
 			self.m.anyadeInstruccion((instruccion, (arg1,)))
-			if formato[0] == "e": # Añadimos la referencia de la etiqueta a refet
+			if formato[0] == "e": # AÃ±adimos la referencia de la etiqueta a refet
 			  if not self.m.refet.has_key(arg1):
 			    self.m.refet[arg1] = [nl]
 			  else:
@@ -186,7 +186,7 @@ class Parser:
 			else:
 			  arg1 = mo_arg1.group(1)
 			  arg2 = mo_arg2.group(1)
-                          # El tercer argumento será un registro (entero o real), un inmediato
+                          # El tercer argumento serÃ¡ un registro (entero o real), un inmediato
 			  # (entero o real) o una etiqueta
 			  if formato[2] == "r":
 			    mo_arg3 = rege.match(mo_instr.group(5))
@@ -208,19 +208,19 @@ class Parser:
 			    self.m.anyadeInstruccion((instruccion, (arg1, arg2, arg3)))
 			  else:
 			    arg3 = mo_arg3.group(1)
-			    if formato[2] == "e": # Añadimos la referencia a refet
+			    if formato[2] == "e": # AÃ±adimos la referencia a refet
 			      if not self.m.refet.has_key(arg3):
 			        self.m.refet[arg3] = [nl]
 			      else:
 			        self.m.refet[arg3].append(nl)
 			    self.m.anyadeInstruccion((instruccion, (arg1, arg2, arg3)))
-	      # Si se trata de una línea en blanco, de un comentario, o de la definición
-	      # de una etiqueta que no va seguida de ninguna instrucción
+	      # Si se trata de una lÃ­nea en blanco, de un comentario, o de la definiciÃ³n
+	      # de una etiqueta que no va seguida de ninguna instrucciÃ³n
 	      if not mo_instr.group(2):
 	        self.m.anyadeInstruccion((self.m.nop,()))
-	    else: # La línea no hace matching
+	    else: # La lÃ­nea no hace matching
               self.m.err.lineaError(nl)
       nl += 1 # Fin del for
-    # Si no aparece .text o no hay ninguna instrucción
+    # Si no aparece .text o no hay ninguna instrucciÃ³n
     if not dentroText or dentroText and not hayInstr:
       self.m.err.finError(nl)
