@@ -102,9 +102,9 @@ class AnalizadorLexico:
                 c = ''
             else:
                 c = s[i]
-            if q < 11:
-                if q < 5:
-                    if q < 2:
+            if q < 13:
+                if q < 6:
+                    if q < 3:
                         if q < 1:
                             if c < u'/':
                                 if c < u'(':
@@ -195,79 +195,86 @@ class AnalizadorLexico:
                                                 else:
                                                     break
                         else:
-                            uf = (u'id', trataId)
-                            ufi = i
-                            if c < u'_':
-                                if c < u'A':
-                                    if u'0' <= c <= u'9':
-                                        q = 1
+                            if q < 2:
+                                uf = (u'id', trataId)
+                                ufi = i
+                                if c < u'_':
+                                    if c < u'A':
+                                        if u'0' <= c <= u'9':
+                                            q = 1
+                                        else:
+                                            break
                                     else:
-                                        break
+                                        if c <= u'Z':
+                                            q = 1
+                                        else:
+                                            break
                                 else:
-                                    if c <= u'Z':
-                                        q = 1
+                                    if c < u'a':
+                                        if c <= u'_':
+                                            q = 1
+                                        else:
+                                            break
                                     else:
-                                        break
+                                        if c <= u'z':
+                                            q = 1
+                                        else:
+                                            break
                             else:
-                                if c < u'a':
-                                    if c <= u'_':
-                                        q = 1
-                                    else:
-                                        break
-                                else:
-                                    if c <= u'z':
-                                        q = 1
-                                    else:
-                                        break
+                                uf = (u'!:', None)
+                                ufi = i
+                                break
                     else:
-                        if q < 3:
-                            uf = (u'!:', None)
+                        if q < 4:
+                            uf = (u'opad', None)
                             ufi = i
                             break
                         else:
-                            if q < 4:
-                                uf = (u'opad', None)
-                                ufi = i
-                                break
-                            else:
+                            if q < 5:
                                 uf = (u'![', None)
                                 ufi = i
                                 break
-                else:
-                    if q < 8:
-                        if q < 6:
-                            uf = (u'!]', None)
-                            ufi = i
-                            break
-                        else:
-                            if q < 7:
-                                if u'=' == c:
-                                    q = 18
-                                else:
-                                    break
                             else:
+                                uf = (u'!]', None)
+                                ufi = i
+                                break
+                else:
+                    if q < 9:
+                        if q < 7:
+                            if u'=' == c:
+                                q = 18
+                            else:
+                                break
+                        else:
+                            if q < 8:
                                 uf = (u'num', trataEntero)
                                 ufi = i
-                                if u'0' <= c <= u'9':
-                                    q = 7
-                                else:
-                                    break
-                    else:
-                        if q < 9:
-                            if c < u'"':
-                                if c < u'\x0b':
-                                    if c <= u'\t':
-                                        q = 8
+                                if c < u'0':
+                                    if u'.' == c:
+                                        q = 21
                                     else:
                                         break
                                 else:
-                                    q = 8
+                                    if c <= u'9':
+                                        q = 7
+                                    else:
+                                        break
                             else:
-                                if c < u'#':
-                                    q = 19
+                                if c < u'"':
+                                    if c < u'\x0b':
+                                        if c <= u'\t':
+                                            q = 8
+                                        else:
+                                            break
+                                    else:
+                                        q = 8
                                 else:
-                                    q = 8
-                        else:
+                                    if c < u'#':
+                                        q = 20
+                                    else:
+                                        q = 8
+                    else:
+                        if q < 11:
                             if q < 10:
                                 uf = (u'!)', None)
                                 ufi = i
@@ -276,21 +283,21 @@ class AnalizadorLexico:
                                 uf = (u'!(', None)
                                 ufi = i
                                 break
-            else:
-                if q < 16:
-                    if q < 13:
-                        if q < 12:
-                            uf = (u'!,', None)
-                            ufi = i
-                            break
                         else:
-                            uf = (u'opmul', None)
-                            ufi = i
-                            if u'/' == c:
-                                q = 20
-                            else:
+                            if q < 12:
+                                uf = (u'!,', None)
+                                ufi = i
                                 break
-                    else:
+                            else:
+                                uf = (u'opmul', None)
+                                ufi = i
+                                if u'/' == c:
+                                    q = 19
+                                else:
+                                    break
+            else:
+                if q < 20:
+                    if q < 16:
                         if q < 14:
                             uf = (u'opcom', None)
                             ufi = i
@@ -316,42 +323,99 @@ class AnalizadorLexico:
                                 uf = (u'!;', None)
                                 ufi = i
                                 break
-                else:
-                    if q < 19:
-                        if q < 17:
-                            uf = (u'opmul', None)
-                            ufi = i
-                            break
-                        else:
-                            if q < 18:
+                    else:
+                        if q < 18:
+                            if q < 17:
+                                uf = (u'opmul', None)
+                                ufi = i
+                                break
+                            else:
                                 uf = (u'!=', None)
                                 ufi = i
                                 if u'=' == c:
                                     q = 18
                                 else:
                                     break
-                            else:
+                        else:
+                            if q < 19:
                                 uf = (u'opcom', None)
                                 ufi = i
                                 break
-                    else:
-                        if q < 20:
+                            else:
+                                if c < '\n':
+                                    q = 19
+                                else:
+                                    if c < u'\x0b':
+                                        q = 22
+                                    else:
+                                        q = 19
+                else:
+                    if q < 23:
+                        if q < 21:
                             uf = (u'cad', trataCad)
                             ufi = i
                             break
                         else:
-                            if q < 21:
-                                if c < '\n':
-                                    q = 20
+                            if q < 22:
+                                if u'0' <= c <= u'9':
+                                    q = 23
                                 else:
-                                    if c < u'\x0b':
-                                        q = 21
-                                    else:
-                                        q = 20
+                                    break
                             else:
                                 uf = (None, None)
                                 ufi = i
                                 break
+                    else:
+                        if q < 25:
+                            if q < 24:
+                                uf = (u'numreal', trataReal)
+                                ufi = i
+                                if c < u'E':
+                                    if u'0' <= c <= u'9':
+                                        q = 23
+                                    else:
+                                        break
+                                else:
+                                    if c < u'e':
+                                        if c <= u'E':
+                                            q = 24
+                                        else:
+                                            break
+                                    else:
+                                        if c <= u'e':
+                                            q = 24
+                                        else:
+                                            break
+                            else:
+                                if c < u'-':
+                                    if u'+' == c:
+                                        q = 25
+                                    else:
+                                        break
+                                else:
+                                    if c < u'0':
+                                        if c <= u'-':
+                                            q = 25
+                                        else:
+                                            break
+                                    else:
+                                        if c <= u'9':
+                                            q = 26
+                                        else:
+                                            break
+                        else:
+                            if q < 26:
+                                if u'0' <= c <= u'9':
+                                    q = 26
+                                else:
+                                    break
+                            else:
+                                uf = (u'numreal', trataReal)
+                                ufi = i
+                                if u'0' <= c <= u'9':
+                                    q = 26
+                                else:
+                                    break
             i += 1
         return (uf, ufi)
 # Código de usuario
@@ -380,6 +444,11 @@ def trataEntero(c):
     c.valor= int(c.lexema)
   except:
     errores.lexico("No he podido convertir %s en un entero." % c.lexema, c.nlinea)
+def trataReal(c):
+  try:
+    c.valor= float(c.lexema)
+  except:
+    errores.lexico("No he podido convertir %s en un real." % c.lexema, c.nlinea)
 def error_lexico(linea, cars):
   if len(cars)> 1:
     if len(cars)> 10:
@@ -444,19 +513,19 @@ def main():
         gencodigo.gencodigo(principal, Funciones, Cadenas, VariablesGlobales)
 mc_primeros = {
     '<AccesoVariable>' : [u'id'],
-    '<Comparado>' : [u'num', u'llama', u'!(', u'id', u'cad'],
+    '<Comparado>' : [u'numreal', u'!(', u'num', u'llama', u'id', u'cad'],
     '<Compuesta>' : [u'secuencia'],
     '<Definicion>' : [u'id'],
-    '<Expresion>' : [u'num', u'llama', u'!(', u'id', u'cad'],
+    '<Expresion>' : [u'numreal', u'!(', u'num', u'llama', u'id', u'cad'],
     '<Funcion>' : [u'funcion'],
     '<Globales>' : [u'globales'],
     '<Llamada>' : [u'llama'],
     '<Perfil>' : [u'!('],
-    '<Producto>' : [u'num', u'llama', u'!(', u'id', u'cad'],
+    '<Producto>' : [u'numreal', u'!(', u'num', u'llama', u'id', u'cad'],
     '<Programa>' : [u'secuencia', u'globales', u'funcion'],
     '<Sentencia>' : [u'escribe', u'si', u'secuencia', u'nl', u'devuelve', u'id'],
-    '<Termino>' : [u'num', u'llama', u'!(', u'id', u'cad'],
-    '<Tipo>' : [u'cadena', u'vector', u'entero'],
+    '<Termino>' : [u'numreal', u'!(', u'num', u'llama', u'id', u'cad'],
+    '<Tipo>' : [u'cadena', u'real', u'vector', u'entero'],
 }
 mc_siguientes = {
     '<AccesoVariable>' : [u'opad', u'!)', u'!]', u'!,', u'entonces', u'opcom', u'opmul', u'!;', u'!='],
@@ -476,19 +545,19 @@ mc_siguientes = {
 }
 mc_aceptables = {
     '<AccesoVariable>' : [u'id'],
-    '<Comparado>' : [u'!(', u'num', u'id', u'llama', u'cad'],
+    '<Comparado>' : [u'numreal', u'num', u'llama', u'!(', u'id', u'cad'],
     '<Compuesta>' : [u'secuencia'],
     '<Definicion>' : [u'id'],
-    '<Expresion>' : [u'!(', u'num', u'id', u'llama', u'cad'],
+    '<Expresion>' : [u'numreal', u'num', u'llama', u'!(', u'id', u'cad'],
     '<Funcion>' : [u'funcion'],
     '<Globales>' : [u'globales'],
     '<Llamada>' : [u'llama'],
     '<Perfil>' : [u'!('],
-    '<Producto>' : [u'!(', u'num', u'id', u'llama', u'cad'],
+    '<Producto>' : [u'numreal', u'num', u'llama', u'!(', u'id', u'cad'],
     '<Programa>' : [u'secuencia', u'globales', u'funcion'],
     '<Sentencia>' : [u'escribe', u'si', u'secuencia', u'nl', u'devuelve', u'id'],
-    '<Termino>' : [u'!(', u'num', u'id', u'llama', u'cad'],
-    '<Tipo>' : [u'cadena', u'vector', u'entero'],
+    '<Termino>' : [u'numreal', u'num', u'llama', u'!(', u'id', u'cad'],
+    '<Tipo>' : [u'cadena', u'real', u'vector', u'entero'],
 }
 mc_anulables = {
     '<AccesoVariable>' : False,
@@ -564,8 +633,8 @@ class AnalizadorSintactico:
         AccesoVariable.arb= arb
     def mc_analiza_Comparado(self, Comparado):
         mc_al = self.mc_al
-        if not mc_al.actual.cat in [ u'!(', 'cad', 'id', 'llama', 'num' ]:
-            mc_error('<Comparado>', [ u'!(', 'cad', 'id', 'llama', 'num' ])
+        if not mc_al.actual.cat in [ u'!(', 'cad', 'id', 'llama', 'num', 'numreal' ]:
+            mc_error('<Comparado>', [ u'!(', 'cad', 'id', 'llama', 'num', 'numreal' ])
         Producto = Producto1 = Atributos()
         Producto2 = Atributos()
         self.mc_analiza_Producto(Producto1)
@@ -644,8 +713,8 @@ class AnalizadorSintactico:
         while self.mc_reintento[-1]:
             self.mc_reintento[-1]= False
             try:
-                if not mc_al.actual.cat in [ u'!(', 'cad', 'id', 'llama', 'num' ]:
-                    mc_error('<Expresion>', [ u'!(', 'cad', 'id', 'llama', 'num' ])
+                if not mc_al.actual.cat in [ u'!(', 'cad', 'id', 'llama', 'num', 'numreal' ]:
+                    mc_error('<Expresion>', [ u'!(', 'cad', 'id', 'llama', 'num', 'numreal' ])
                 Comparado = Comparado1 = Atributos()
                 Comparado2 = Atributos()
                 self.mc_analiza_Comparado(Comparado1)
@@ -782,7 +851,7 @@ class AnalizadorSintactico:
         else:
             mc_error('<Llamada>', [u'!('])
         l=[]
-        if mc_al.actual.cat in [ u'!(', 'cad', 'id', 'llama', 'num' ]:
+        if mc_al.actual.cat in [ u'!(', 'cad', 'id', 'llama', 'num', 'numreal' ]:
             self.mc_analiza_Expresion(Expresion1)
             Expresion_ = Expresion1
             l.append(Expresion_.arb)
@@ -836,8 +905,8 @@ class AnalizadorSintactico:
         Perfil.tipo= Tipo.tipo
     def mc_analiza_Producto(self, Producto):
         mc_al = self.mc_al
-        if not mc_al.actual.cat in [ u'!(', 'cad', 'id', 'llama', 'num' ]:
-            mc_error('<Producto>', [ u'!(', 'cad', 'id', 'llama', 'num' ])
+        if not mc_al.actual.cat in [ u'!(', 'cad', 'id', 'llama', 'num', 'numreal' ]:
+            mc_error('<Producto>', [ u'!(', 'cad', 'id', 'llama', 'num', 'numreal' ])
         Termino = Termino1 = Atributos()
         Termino2 = Atributos()
         self.mc_analiza_Termino(Termino1)
@@ -983,8 +1052,8 @@ class AnalizadorSintactico:
         self.mc_reintento.pop()
     def mc_analiza_Termino(self, Termino):
         mc_al = self.mc_al
-        if not mc_al.actual.cat in [ u'!(', 'cad', 'id', 'llama', 'num' ]:
-            mc_error('<Termino>', [ u'!(', 'cad', 'id', 'llama', 'num' ])
+        if not mc_al.actual.cat in [ u'!(', 'cad', 'id', 'llama', 'num', 'numreal' ]:
+            mc_error('<Termino>', [ u'!(', 'cad', 'id', 'llama', 'num', 'numreal' ])
         AccesoVariable = AccesoVariable1 = Atributos()
         Llamada = Llamada1 = Atributos()
         Expresion = Expresion1 = Atributos()
@@ -1009,6 +1078,10 @@ class AnalizadorSintactico:
             else:
                 mc_error('<Termino>', [u'!)'])
             Termino.arb= Expresion.arb
+        elif mc_al.actual.cat == u'numreal':
+            numreal = numreal1 = numreal_ = mc_al.actual
+            mc_al.avanza()
+            Termino.arb= AST.NodoReal(numreal.valor, numreal.nlinea)
         else:
             cad = cad1 = cad_ = mc_al.actual
             mc_al.avanza()
@@ -1017,8 +1090,8 @@ class AnalizadorSintactico:
             Cadenas.append(c)
     def mc_analiza_Tipo(self, Tipo):
         mc_al = self.mc_al
-        if not mc_al.actual.cat in [ u'cadena', 'entero', 'vector' ]:
-            mc_error('<Tipo>', [ u'cadena', 'entero', 'vector' ])
+        if not mc_al.actual.cat in [ u'cadena', 'entero', 'real', 'vector' ]:
+            mc_error('<Tipo>', [ u'cadena', 'entero', 'real', 'vector' ])
         if mc_al.actual.cat == u'entero':
             entero = entero1 = entero_ = mc_al.actual
             mc_al.avanza()
@@ -1027,6 +1100,10 @@ class AnalizadorSintactico:
             cadena = cadena1 = cadena_ = mc_al.actual
             mc_al.avanza()
             Tipo.tipo= tipos.Cadena
+        elif mc_al.actual.cat == u'real':
+            real = real1 = real_ = mc_al.actual
+            mc_al.avanza()
+            Tipo.tipo= tipos.Real
         else:
             Tipo1 = Atributos()
             vector = vector1 = vector_ = mc_al.actual

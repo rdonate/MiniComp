@@ -26,6 +26,7 @@ class Elemental(Tipo):
 
 Entero= Elemental("Entero")
 Cadena= Elemental("Cadena")
+Real = Elemental("Real")
 Logico= Elemental("Logico")
 Error= Elemental("Error")
 

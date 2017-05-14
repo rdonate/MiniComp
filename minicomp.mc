@@ -3,6 +3,7 @@ None	None         //[^\n]*\n
 cad	trataCad     "[^"\n]*"
 id	trataId	     [a-zA-Z][a-zA-Z0-9_]*
 num	trataEntero  [0-9]+
+numreal trataReal   [0-9]+\.[0-9]+([eE][-+]?[0-9]+)?
 opcom   None         [<>]=?|[=!]=
 opad	None	     [-+]
 opmul	None	     [*/%]
@@ -38,6 +39,12 @@ def trataEntero(c):
     c.valor= int(c.lexema)
   except:
     errores.lexico("No he podido convertir %s en un entero." % c.lexema, c.nlinea)
+
+def trataReal(c):
+  try:
+    c.valor= float(c.lexema)
+  except:
+    errores.lexico("No he podido convertir %s en un real." % c.lexema, c.nlinea)
 
 def error_lexico(linea, cars):
   if len(cars)> 1:
@@ -97,6 +104,7 @@ $mc_al.sincroniza(["mc_EOF"])$
 
 <Tipo>-> entero @Tipo.tipo= tipos.Entero@ ;
 <Tipo>-> cadena @Tipo.tipo= tipos.Cadena@ ;
+<Tipo>-> real @Tipo.tipo= tipos.Real@ ;
 <Tipo>-> vector "[" num "]" de <Tipo> @Tipo.tipo= tipos.Array(num.valor, Tipo1.tipo)@ ;
 
 <Funcion> ->
@@ -230,6 +238,7 @@ $mc_al.sincroniza(["mc_EOF"])$
   | <Llamada> @Termino.arb= Llamada.arb@
   | num @Termino.arb= AST.NodoEntero(num.valor, num.nlinea)@
   | "(" <Expresion> ")" @Termino.arb= Expresion.arb@
+  | numreal @Termino.arb= AST.NodoReal(numreal.valor, numreal.nlinea)@
   | cad
     @c= cadenas.Cadena(cad.valor)@
     @Termino.arb= AST.NodoCadena(c, cad.nlinea)@

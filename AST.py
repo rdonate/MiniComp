@@ -99,8 +99,8 @@ class NodoEscribe(AST):
   def compsemanticas(self):
     self.exp.compsemanticas()
     if self.exp.tipo!= tipos.Error:
-      if self.exp.tipo!= tipos.Entero and self.exp.tipo!= tipos.Cadena:
-        errores.semantico("Solo se escribir enteros y cadenas.", self.linea)
+      if self.exp.tipo!= tipos.Entero and self.exp.tipo!=tipos.Real and self.exp.tipo!= tipos.Cadena:
+        errores.semantico("Solo se escribir enteros, reales y cadenas.", self.linea)
 
   def generaCodigo(self, c):
     c.append(R.Comentario("Escribe, linea %d" % self.linea))
@@ -110,6 +110,8 @@ class NodoEscribe(AST):
       c.append(R.addi("sc", "zero", 0, "Escribe entero"))
     elif self.exp.tipo== tipos.Cadena:
       c.append(R.addi("sc", "zero", 2, "Escribe cadena"))
+    elif self.exp.tipo== tipos.Real:
+      c.append(R.faddi("sc", "zero", 2, "Escribe real"))
     c.append(R.syscall())
     registros.libera(r)
 
@@ -180,12 +182,17 @@ class NodoAritmetica(AST):
   def compsemanticas(self):
     self.izdo.compsemanticas()
     self.dcho.compsemanticas()
-    if not tipos.igualOError(self.izdo.tipo, tipos.Entero) or \
-       not tipos.igualOError(self.dcho.tipo, tipos.Entero):
-      errores.semantico("Las operaciones aritmeticas solo pueden operar con enteros.", self.linea)
+    if tipos.igualOError(self.izdo.tipo, tipos.Cadena) or \
+       tipos.igualOError(self.dcho.tipo, tipos.Cadena):
+      errores.semantico("Las operaciones aritmeticas solo pueden operar con enteros y reales.", self.linea)
       self.tipo= tipos.Error
     else:
-      self.tipo= tipos.Entero
+      if tipos.igualOError(self.izdo.tipo,self.dcho.tipo):
+        self.tipo=self.izdo.tipo
+      elif tipos.igualOError(self.izdo.tipo, tipos.Real) or tipos.igualOError(self.dcho.tipo, tipos.Real):
+        self.tipo=tipos.Real
+      else:
+        self.tipo= tipos.Entero
 
   def generaCodigo(self, c):
     iz= self.izdo.generaCodigo(c)
@@ -222,6 +229,22 @@ class NodoEntero(AST):
 
   def arbol(self):
     return '( "Entero" "valor: %d" "tipo: %s" "linea: %d" )' % (self.valor, self.tipo, self.linea)
+
+class NodoReal(AST):
+  def __init__(self, valor, linea):
+    self.valor= valor
+    self.linea= linea
+
+  def compsemanticas(self):
+    self.tipo= tipos.Real
+
+  def generaCodigo(self, c):
+    r= registros.reserva()
+    c.append(R.faddi(r, "zero", self.valor, "Valor real"))
+    return r
+
+  def arbol(self):
+    return '( "Real" "valor: %e" "tipo: %s" "linea: %e" )' % (self.valor, self.tipo, self.linea)
 
 class NodoCadena(AST):
   def __init__(self, cad, linea):
@@ -352,7 +375,7 @@ class NodoAccesoVector(AST):
     base= self.izda.generaDir(c)
     desp= self.exp.generaCodigo(c)
     if self.tipo.talla()> 1:
-      c.append(R.multi(desp, desp, self.tipo.talla(), "Tamaño del %s" % self.tipo))
+      c.append(R.multi(desp, desp, self.tipo.talla(), "Tamaï¿½o del %s" % self.tipo))
     c.append(R.add(base, base, desp))
     registros.libera(desp)
     return base
