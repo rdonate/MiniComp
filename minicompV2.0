@@ -1,0 +1,1061 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+# Este código ha sido generado por metacomp, versión 3.0beta5
+import sys
+class mc_error_sintaxis(Exception): pass
+class mc_error_noEOF(Exception): pass
+class mc_error_abandonar(Exception): pass
+def mc_error(nt, esp):
+    raise mc_error_sintaxis, (nt, esp)
+def mc_abandonar():
+    raise mc_error_abandonar
+def mc_pretty_cat(cat):
+    if cat is None or cat[0]!='!':
+        return cat
+    else:
+        return '"%s"' % cat[1:]
+class ComponenteLexico:
+    def __init__(self, cat, lexema, nlinea):
+        self.cat = cat
+        self.lexema = lexema
+        self.nlinea = nlinea
+    def __str__(self):
+        s = ['%s: %s' % (repr(k), repr(v)) for k, v in self.__dict__.items() if k != 'cat']
+        if s:
+            return '%s (%s)' % (mc_pretty_cat(self.cat), ', '.join(s))
+        else:
+            return mc_pretty_cat(self.cat)
+class AnalizadorLexico:
+    def __init__(self, entrada):
+        if isinstance(entrada, basestring):
+            if isinstance(entrada, unicode):
+                self.l = entrada
+            else:
+                self.l = entrada.decode('utf-8')
+        else:
+            try:
+                ll = entrada.readlines()
+            except:
+                sys.stderr.write('Error: no he podido leer la entrada ¿es un fichero?\n')
+                sys.exit(1)
+            ll = [ l.decode('utf-8') for l in ll]
+            self.l = ''.join(ll)
+            entrada.close()
+        self.nlactual = 1
+        self.actual = ComponenteLexico(None, None, 0)
+        try:
+            self.error_lexico = error_lexico
+        except NameError:
+            self.error_lexico = self._error_lexico
+        self.i = 0
+    def _error_lexico(self, linea_error, cars):
+        sys.stderr.write((u'Error léxico no tratado en línea %d: No esperaba %s.\n' % (linea_error, repr(cars))).encode('utf-8'))
+        sys.exit(1)
+    def linea(self):
+        return self.actual.nlinea
+    def sincroniza(self, sincr, enEOF = mc_abandonar):
+        while self.actual.cat not in sincr and self.actual.cat != 'mc_EOF':
+            self.avanza()
+        if self.actual.cat =='mc_EOF' and not 'mc_EOF' in sincr:
+            enEOF()
+    def avanza(self):
+        if self.i >= len(self.l):
+            self.actual = ComponenteLexico('mc_EOF', '', self.nlactual)
+            return self.actual
+        carsError, lineaError = [], 0
+        while 1:
+            (info, ni) = self.analiza(self.i, self.l)
+            if not info is None:
+                nl = self.nlactual
+                if carsError:
+                    self.error_lexico(lineaError, ''.join(carsError))
+                    self.nlactual += carsError.count('\n')
+                    carsError, lineaError = [], 0
+                cat, ff = info
+                lexema = self.l[self.i:ni]
+                self.i = ni
+                self.nlactual += lexema.count('\n')
+                componente = ComponenteLexico(cat, lexema, nl)
+                if ff:
+                    ff(componente)
+                if not componente.cat is None:
+                    self.actual = componente
+                    return componente
+                continue
+            else:
+                if self.i >= len(self.l):
+                    if carsError:
+                        self.error_lexico(lineaError, ''.join(carsError))
+                        self.nlactual += carsError.count('\n')
+                    self.actual = ComponenteLexico('mc_EOF', '', self.nlactual)
+                    return self.actual
+                if lineaError == 0: lineaError = self.nlactual
+                carsError.append(self.l[self.i])
+                self.i += 1
+        return self.actual
+    def analiza(self, i, s):
+        q = 0
+        uf = None
+        ufi = None
+        while i <= len(s):
+            if i == len(s):
+                c = ''
+            else:
+                c = s[i]
+            if q < 11:
+                if q < 5:
+                    if q < 2:
+                        if q < 1:
+                            if c < u'/':
+                                if c < u'(':
+                                    if c < u'!':
+                                        if c < u' ':
+                                            if u'\t' <= c <= u'\n':
+                                                q = 14
+                                            else:
+                                                break
+                                        else:
+                                            q = 14
+                                    else:
+                                        if c < u'"':
+                                            q = 6
+                                        else:
+                                            if c < u'%':
+                                                if c <= u'"':
+                                                    q = 8
+                                                else:
+                                                    break
+                                            else:
+                                                if c <= u'%':
+                                                    q = 16
+                                                else:
+                                                    break
+                                else:
+                                    if c < u'+':
+                                        if c < u')':
+                                            q = 10
+                                        else:
+                                            if c < u'*':
+                                                q = 9
+                                            else:
+                                                q = 16
+                                    else:
+                                        if c < u',':
+                                            q = 3
+                                        else:
+                                            if c < u'-':
+                                                q = 11
+                                            else:
+                                                if c <= u'-':
+                                                    q = 3
+                                                else:
+                                                    break
+                            else:
+                                if c < u'=':
+                                    if c < u':':
+                                        if c < u'0':
+                                            q = 12
+                                        else:
+                                            q = 7
+                                    else:
+                                        if c < u';':
+                                            q = 2
+                                        else:
+                                            if c < u'<':
+                                                q = 15
+                                            else:
+                                                q = 13
+                                else:
+                                    if c < u'[':
+                                        if c < u'>':
+                                            q = 17
+                                        else:
+                                            if c < u'A':
+                                                if c <= u'>':
+                                                    q = 13
+                                                else:
+                                                    break
+                                            else:
+                                                q = 1
+                                    else:
+                                        if c < u']':
+                                            if c <= u'[':
+                                                q = 4
+                                            else:
+                                                break
+                                        else:
+                                            if c < u'a':
+                                                if c <= u']':
+                                                    q = 5
+                                                else:
+                                                    break
+                                            else:
+                                                if c <= u'z':
+                                                    q = 1
+                                                else:
+                                                    break
+                        else:
+                            uf = (u'id', trataId)
+                            ufi = i
+                            if c < u'_':
+                                if c < u'A':
+                                    if u'0' <= c <= u'9':
+                                        q = 1
+                                    else:
+                                        break
+                                else:
+                                    if c <= u'Z':
+                                        q = 1
+                                    else:
+                                        break
+                            else:
+                                if c < u'a':
+                                    if c <= u'_':
+                                        q = 1
+                                    else:
+                                        break
+                                else:
+                                    if c <= u'z':
+                                        q = 1
+                                    else:
+                                        break
+                    else:
+                        if q < 3:
+                            uf = (u'!:', None)
+                            ufi = i
+                            if u'=' == c:
+                                q = 21
+                            else:
+                                break
+                        else:
+                            if q < 4:
+                                uf = (u'opad', None)
+                                ufi = i
+                                break
+                            else:
+                                uf = (u'![', None)
+                                ufi = i
+                                break
+                else:
+                    if q < 8:
+                        if q < 6:
+                            uf = (u'!]', None)
+                            ufi = i
+                            break
+                        else:
+                            if q < 7:
+                                if u'=' == c:
+                                    q = 17
+                                else:
+                                    break
+                            else:
+                                uf = (u'num', trataEntero)
+                                ufi = i
+                                if u'0' <= c <= u'9':
+                                    q = 7
+                                else:
+                                    break
+                    else:
+                        if q < 9:
+                            if c < u'"':
+                                if c < u'\x0b':
+                                    if c <= u'\t':
+                                        q = 8
+                                    else:
+                                        break
+                                else:
+                                    q = 8
+                            else:
+                                if c < u'#':
+                                    q = 20
+                                else:
+                                    q = 8
+                        else:
+                            if q < 10:
+                                uf = (u'!)', None)
+                                ufi = i
+                                break
+                            else:
+                                uf = (u'!(', None)
+                                ufi = i
+                                break
+            else:
+                if q < 16:
+                    if q < 13:
+                        if q < 12:
+                            uf = (u'!,', None)
+                            ufi = i
+                            break
+                        else:
+                            uf = (u'opmul', None)
+                            ufi = i
+                            if u'/' == c:
+                                q = 18
+                            else:
+                                break
+                    else:
+                        if q < 14:
+                            uf = (u'opcom', None)
+                            ufi = i
+                            if u'=' == c:
+                                q = 17
+                            else:
+                                break
+                        else:
+                            if q < 15:
+                                uf = (None, None)
+                                ufi = i
+                                if c < u' ':
+                                    if u'\t' <= c <= u'\n':
+                                        q = 14
+                                    else:
+                                        break
+                                else:
+                                    if c <= u' ':
+                                        q = 14
+                                    else:
+                                        break
+                            else:
+                                uf = (u'!;', None)
+                                ufi = i
+                                break
+                else:
+                    if q < 19:
+                        if q < 17:
+                            uf = (u'opmul', None)
+                            ufi = i
+                            break
+                        else:
+                            if q < 18:
+                                uf = (u'opcom', None)
+                                ufi = i
+                                break
+                            else:
+                                if c < '\n':
+                                    q = 18
+                                else:
+                                    if c < u'\x0b':
+                                        q = 19
+                                    else:
+                                        q = 18
+                    else:
+                        if q < 20:
+                            uf = (None, None)
+                            ufi = i
+                            break
+                        else:
+                            if q < 21:
+                                uf = (u'cad', trataCad)
+                                ufi = i
+                                break
+                            else:
+                                uf = (u'!:=', None)
+                                ufi = i
+                                break
+            i += 1
+        return (uf, ufi)
+# Código de usuario
+import AST
+import cadenas
+import errores
+import errsintactico
+import funciones
+import gencodigo
+from optparse import OptionParser
+from sets import ImmutableSet
+import TDS as tds
+import tipos
+import variables
+def trataCad(c):
+  c.valor= c.lexema[1:-1]
+_reservadas=ImmutableSet(["cadena", "de", "devuelve",
+        "entero", "entonces", "es", "escribe", "fin",
+        "funcion", "globales", "llama",  "locales",
+        "nl", "secuencia", "si", "si_no", "vector"])
+def trataId(c):
+  if c.lexema in _reservadas:
+    c.cat= c.lexema
+def trataEntero(c):
+  try:
+    c.valor= int(c.lexema)
+  except:
+    errores.lexico("No he podido convertir %s en un entero." % c.lexema, c.nlinea)
+def error_lexico(linea, cars):
+  if len(cars)> 1:
+    if len(cars)> 10:
+      cars= cars[:10]+"..."
+    errores.lexico("No he podido analizar la cadena %s." % repr(cars), linea)
+  else:
+    errores.lexico("No he podido analizar el carácter %s." % repr(cars), linea)
+def inicializaGlobales():
+  global TDS, Funciones, VariablesGlobales, Cadenas
+  global funcionError, cadenaNL
+  TDS=tds.TDS()
+  Funciones= []
+  VariablesGlobales= []
+  Cadenas= []
+  cadenaNL= cadenas.Cadena("\n")
+  Cadenas.append(cadenaNL)
+  funcionError= "#ferror"
+  ferror= funciones.NodoFuncion(funcionError,0)
+  ferror.fijaPerfil([], tipos.Error)
+  TDS.define(funcionError, ferror, 0)
+  errsintactico.inicializa(mc_primeros, mc_siguientes)
+def main():
+  parser= OptionParser(usage="%prog [<opciones>] <fichero>")
+  parser.add_option("-l", "--escribeLexico", action="store_true", default=False,
+                    help= "Escribe el resultado del análisis léxico")
+  parser.add_option("-s", "--escribeAST", action="store_true", default= False,
+                    help= "Escribe el AST")
+  (opciones, args)= parser.parse_args()
+  if len(args)!= 1:
+    sys.stderr.write("Error, debes incluir un fichero fuente")
+    sys.exit(1)
+  else:
+    try:
+      f= open(args[0])
+    except:
+      sys.stderr.write("Error, no he podido abrir %s para lectura.\n" % args[0])
+      sys.exit(1)
+  if opciones.escribeLexico:
+    lex= AnalizadorLexico(f)
+    lex.avanza()
+    while lex.actual.cat!= "mc_EOF":
+      print lex.actual
+      lex.avanza()
+  else:
+    inicializaGlobales()
+    A= AnalizadorSintactico(f)
+    principal= A.Programa.principal
+    principal.compsemanticas()
+    for f in Funciones:
+      f.compsemanticas()
+    if opciones.escribeAST:
+      if errores.errores:
+        errores.escribeErrores(sys.stderr)
+      print principal
+      for f in Funciones:
+        print f.arbol()
+    else:
+      if errores.errores:
+        errores.escribeErrores(sys.stderr)
+        sys.exit(1)
+      else:
+        gencodigo.gencodigo(principal, Funciones, Cadenas, VariablesGlobales)
+mc_primeros = {
+    '<AccesoVariable>' : [u'id'],
+    '<Comparado>' : [u'num', u'llama', u'!(', u'id', u'cad'],
+    '<Compuesta>' : [u'secuencia'],
+    '<Definicion>' : [u'id'],
+    '<Expresion>' : [u'num', u'llama', u'!(', u'id', u'cad'],
+    '<Funcion>' : [u'funcion'],
+    '<Globales>' : [u'globales'],
+    '<Llamada>' : [u'llama'],
+    '<Perfil>' : [u'!('],
+    '<Producto>' : [u'num', u'llama', u'!(', u'id', u'cad'],
+    '<Programa>' : [u'secuencia', u'globales', u'funcion'],
+    '<Sentencia>' : [u'escribe', u'si', u'secuencia', u'nl', u'devuelve', u'id'],
+    '<Termino>' : [u'num', u'llama', u'!(', u'id', u'cad'],
+    '<Tipo>' : [u'cadena', u'vector', u'entero'],
+}
+mc_siguientes = {
+    '<AccesoVariable>' : [u'opad', u'!)', u'!,', u'entonces', u'opcom', u'!:=', u'opmul', u'!;', u'!]'],
+    '<Comparado>' : [u'!)', u'!,', u'entonces', u'opcom', u'!;', u'!]'],
+    '<Compuesta>' : [u'secuencia', u'nl', u'escribe', 'mc_EOF', u'si', u'si_no', u'devuelve', u'fin', u'id', u'funcion'],
+    '<Definicion>' : [u'!)', u'!;'],
+    '<Expresion>' : [u'!)', u'!;', u'!]', u'!,', u'entonces'],
+    '<Funcion>' : [u'secuencia', u'funcion'],
+    '<Globales>' : [u'secuencia', u'funcion'],
+    '<Llamada>' : [u'opad', u'!)', u'!,', u'entonces', u'opcom', u'opmul', u'!;', u'!]'],
+    '<Perfil>' : [u'es'],
+    '<Producto>' : [u'opad', u'!)', u'!,', u'entonces', u'opcom', u'!;', u'!]'],
+    '<Programa>' : ['mc_EOF'],
+    '<Sentencia>' : [u'si_no', u'nl', u'escribe', u'si', u'secuencia', u'devuelve', u'fin', u'id'],
+    '<Termino>' : [u'opad', u'!)', u'!,', u'entonces', u'opcom', u'opmul', u'!;', u'!]'],
+    '<Tipo>' : [u'!)', u'!;', u'es'],
+}
+mc_aceptables = {
+    '<AccesoVariable>' : [u'id'],
+    '<Comparado>' : [u'!(', u'num', u'id', u'llama', u'cad'],
+    '<Compuesta>' : [u'secuencia'],
+    '<Definicion>' : [u'id'],
+    '<Expresion>' : [u'!(', u'num', u'id', u'llama', u'cad'],
+    '<Funcion>' : [u'funcion'],
+    '<Globales>' : [u'globales'],
+    '<Llamada>' : [u'llama'],
+    '<Perfil>' : [u'!('],
+    '<Producto>' : [u'!(', u'num', u'id', u'llama', u'cad'],
+    '<Programa>' : [u'secuencia', u'globales', u'funcion'],
+    '<Sentencia>' : [u'escribe', u'si', u'secuencia', u'nl', u'devuelve', u'id'],
+    '<Termino>' : [u'!(', u'num', u'id', u'llama', u'cad'],
+    '<Tipo>' : [u'cadena', u'vector', u'entero'],
+}
+mc_anulables = {
+    '<AccesoVariable>' : False,
+    '<Comparado>' : False,
+    '<Compuesta>' : False,
+    '<Definicion>' : False,
+    '<Expresion>' : False,
+    '<Funcion>' : False,
+    '<Globales>' : False,
+    '<Llamada>' : False,
+    '<Perfil>' : False,
+    '<Producto>' : False,
+    '<Programa>' : False,
+    '<Sentencia>' : False,
+    '<Termino>' : False,
+    '<Tipo>' : False,
+}
+class Atributos: pass
+class AnalizadorSintactico:
+    def __init__(self, entrada, entorno = None):
+        self.mc_entorno = entorno
+        self.mc_al = AnalizadorLexico(entrada)
+        self.mc_al.avanza()
+        self.mc_reintento = [True]
+        mc_reintentar = self.mc_reintentar
+        while self.mc_reintento[-1]:
+            self.mc_reintento[-1] = False
+            self.Programa = Atributos()
+            try:
+                self.mc_analiza_Programa(self.Programa)
+                if self.mc_al.actual.cat != 'mc_EOF':
+                    raise mc_error_noEOF
+            except mc_error_sintaxis, (nt, esp):
+                sys.stderr.write('Error no tratado en línea %d:\n' % self.mc_al.actual.nlinea)
+                sys.stderr.write((u'Estaba analizando la expansión del no terminal %s y he encontrado\n el terminal %s.\n' % (nt, self.mc_al.actual)).encode('utf-8'))
+                if len(esp)==1:
+                    sys.stderr.write((u'Sólo valía un %s.\n' % mc_pretty_cat(esp[0])).encode('utf-8'))
+                else:
+                    sys.stderr.write((u'Tendría que haber sido uno de los siguientes: %s.\n' % ','.join(map(mc_pretty_cat,esp))).encode('utf-8'))
+                sys.exit(1)
+            except mc_error_noEOF:
+                mc_al = self.mc_al
+                errores.sintactico("He encontrado entrada después del último fin.", mc_al.linea())
+                mc_al.sincroniza(["mc_EOF"])
+            except mc_error_abandonar:
+                pass
+    def mc_reintentar(self):
+        self.mc_reintento[-1] = True
+    def mc_analiza_AccesoVariable(self, AccesoVariable):
+        mc_al = self.mc_al
+        if not mc_al.actual.cat == u'id':
+            mc_error('<AccesoVariable>', [ u'id' ])
+        Expresion = Expresion1 = Atributos()
+        id = id1 = id_ = mc_al.actual
+        mc_al.avanza()
+        if not TDS.existe(id.lexema):
+          errores.semantico("La variable %s no está definida." % id.lexema, id.nlinea)
+          var= variables.Variable(id.lexema, tipos.Error, TDS.enFuncion()!= None, id.nlinea)
+          TDS.define(id.lexema, var, id.nlinea)
+        arb= AST.NodoAccesoVariable(TDS.recupera(id.lexema), id.nlinea)
+        while mc_al.actual.cat == u'![':
+            mc_al.avanza()
+            nlinea= mc_al.linea()
+            self.mc_analiza_Expresion(Expresion1)
+            Expresion_ = Expresion1
+            if mc_al.actual.cat == u'!]':
+                mc_al.avanza()
+            else:
+                mc_error('<AccesoVariable>', [u'!]'])
+            arb= AST.NodoAccesoVector(arb, Expresion.arb, nlinea)
+        if not mc_al.actual.cat in [ u'!)', '!,', '!:=', '!;', '!]', 'entonces', 'opad', 'opcom', 'opmul' ]:
+            mc_error('<AccesoVariable>',[ u'!)', '!,', '!:=', '!;', '![', '!]', 'entonces', 'opad', 'opcom', 'opmul' ])
+        AccesoVariable.arb= arb
+    def mc_analiza_Comparado(self, Comparado):
+        mc_al = self.mc_al
+        if not mc_al.actual.cat in [ u'!(', 'cad', 'id', 'llama', 'num' ]:
+            mc_error('<Comparado>', [ u'!(', 'cad', 'id', 'llama', 'num' ])
+        Producto = Producto1 = Atributos()
+        Producto2 = Atributos()
+        self.mc_analiza_Producto(Producto1)
+        Producto_ = Producto1
+        arb= Producto.arb
+        while mc_al.actual.cat == u'opad':
+            opad = opad1 = opad_ = mc_al.actual
+            mc_al.avanza()
+            self.mc_analiza_Producto(Producto2)
+            Producto_ = Producto2
+            arb= AST.NodoAritmetica(opad.lexema, arb, Producto_.arb, opad.nlinea)
+        if not mc_al.actual.cat in [ u'!)', '!,', '!;', '!]', 'entonces', 'opcom' ]:
+            mc_error('<Comparado>',[ u'!)', '!,', '!;', '!]', 'entonces', 'opad', 'opcom' ])
+        Comparado.arb= arb
+    def mc_analiza_Compuesta(self, Compuesta):
+        mc_al = self.mc_al
+        if not mc_al.actual.cat == u'secuencia':
+            mc_error('<Compuesta>', [ u'secuencia' ])
+        Sentencia = Sentencia1 = Atributos()
+        l= []
+        secuencia = secuencia1 = secuencia_ = mc_al.actual
+        mc_al.avanza()
+        while mc_al.actual.cat in [ u'devuelve', 'escribe', 'id', 'nl', 'secuencia', 'si' ]:
+            self.mc_analiza_Sentencia(Sentencia1)
+            Sentencia_ = Sentencia1
+            l.append(Sentencia.arb)
+        if not mc_al.actual.cat == u'fin':
+            mc_error('<Compuesta>',[ u'devuelve', 'escribe', 'fin', 'id', 'nl', 'secuencia', 'si' ])
+        if mc_al.actual.cat == u'fin':
+            fin = fin1 = fin_ = mc_al.actual
+            mc_al.avanza()
+        else:
+            mc_error('<Compuesta>', [u'fin'])
+        Compuesta.arb= AST.NodoCompuesta(l, secuencia.nlinea)
+    def mc_analiza_Definicion(self, Definicion):
+        mc_al = self.mc_al
+        self.mc_reintento.append(True)
+        mc_reintentar= self.mc_reintentar
+        while self.mc_reintento[-1]:
+            self.mc_reintento[-1]= False
+            try:
+                if not mc_al.actual.cat == u'id':
+                    mc_error('<Definicion>', [ u'id' ])
+                Tipo = Tipo1 = Atributos()
+                id = id1 = id_ = mc_al.actual
+                mc_al.avanza()
+                l=[id]
+                while mc_al.actual.cat == u'!,':
+                    mc_al.avanza()
+                    if mc_al.actual.cat == u'id':
+                        id2 = id_ = mc_al.actual
+                        mc_al.avanza()
+                    else:
+                        mc_error('<Definicion>', [u'id'])
+                    l.append(id2)
+                if not mc_al.actual.cat == u'!:':
+                    mc_error('<Definicion>',[ u'!,', '!:' ])
+                if mc_al.actual.cat == u'!:':
+                    mc_al.avanza()
+                else:
+                    mc_error('<Definicion>', [u'!:'])
+                self.mc_analiza_Tipo(Tipo1)
+                Tipo_ = Tipo1
+                for id in l:
+                  var= variables.Variable(id.lexema, Tipo.tipo, TDS.enFuncion()!= None, id.nlinea)
+                  Definicion.variables.append(var)
+                  TDS.define(id.lexema, var, id.nlinea)
+            except mc_error_sintaxis, (mc_nt, mc_t):
+                if errsintactico.trataError(mc_al, mc_nt, "<Definicion>"):
+                  mc_reintentar()
+        self.mc_reintento.pop()
+    def mc_analiza_Expresion(self, Expresion):
+        mc_al = self.mc_al
+        self.mc_reintento.append(True)
+        mc_reintentar= self.mc_reintentar
+        while self.mc_reintento[-1]:
+            self.mc_reintento[-1]= False
+            try:
+                if not mc_al.actual.cat in [ u'!(', 'cad', 'id', 'llama', 'num' ]:
+                    mc_error('<Expresion>', [ u'!(', 'cad', 'id', 'llama', 'num' ])
+                Comparado = Comparado1 = Atributos()
+                Comparado2 = Atributos()
+                self.mc_analiza_Comparado(Comparado1)
+                Comparado_ = Comparado1
+                arb= Comparado.arb
+                while mc_al.actual.cat == u'opcom':
+                    opcom = opcom1 = opcom_ = mc_al.actual
+                    mc_al.avanza()
+                    self.mc_analiza_Comparado(Comparado2)
+                    Comparado_ = Comparado2
+                    arb= AST.NodoComparacion(opcom.lexema, arb, Comparado_.arb, opcom.nlinea)
+                if not mc_al.actual.cat in [ u'!)', '!,', '!;', '!]', 'entonces' ]:
+                    mc_error('<Expresion>',[ u'!)', '!,', '!;', '!]', 'entonces', 'opcom' ])
+                Expresion.arb= arb
+            except mc_error_sintaxis, (mc_nt, mc_t):
+                if errsintactico.trataError(mc_al, mc_nt, "<Expresion>"):
+                  mc_reintentar()
+                else:
+                  Expresion.arb= AST.NodoVacio(mc_al.linea())
+        self.mc_reintento.pop()
+    def mc_analiza_Funcion(self, Funcion):
+        mc_al = self.mc_al
+        self.mc_reintento.append(True)
+        mc_reintentar= self.mc_reintentar
+        while self.mc_reintento[-1]:
+            self.mc_reintento[-1]= False
+            try:
+                if not mc_al.actual.cat == u'funcion':
+                    mc_error('<Funcion>', [ u'funcion' ])
+                Perfil = Perfil1 = Atributos()
+                Definicion = Definicion1 = Atributos()
+                Compuesta = Compuesta1 = Atributos()
+                funcion = funcion1 = funcion_ = mc_al.actual
+                mc_al.avanza()
+                if mc_al.actual.cat == u'id':
+                    id = id1 = id_ = mc_al.actual
+                    mc_al.avanza()
+                else:
+                    mc_error('<Funcion>', [u'id'])
+                f= funciones.NodoFuncion(id.lexema, funcion.nlinea)
+                TDS.define(id.lexema, f, id.nlinea)
+                TDS.entraFuncion(f)
+                self.mc_analiza_Perfil(Perfil1)
+                Perfil_ = Perfil1
+                if mc_al.actual.cat == u'es':
+                    es = es1 = es_ = mc_al.actual
+                    mc_al.avanza()
+                else:
+                    mc_error('<Funcion>', [u'es'])
+                f.fijaPerfil(Perfil.parametros, Perfil.tipo)
+                if mc_al.actual.cat == u'locales':
+                    locales = locales1 = locales_ = mc_al.actual
+                    mc_al.avanza()
+                    while True:
+                        Definicion.variables= f.listaVariables()
+                        self.mc_analiza_Definicion(Definicion1)
+                        Definicion_ = Definicion1
+                        if mc_al.actual.cat == u'!;':
+                            mc_al.avanza()
+                        else:
+                            mc_error('<Funcion>', [u'!;'])
+                        if mc_al.actual.cat != u'id': break
+                    if not mc_al.actual.cat == u'fin':
+                        mc_error('<Funcion>',[ u'id' ])
+                    if mc_al.actual.cat == u'fin':
+                        fin = fin1 = fin_ = mc_al.actual
+                        mc_al.avanza()
+                    else:
+                        mc_error('<Funcion>', [u'fin'])
+                self.mc_analiza_Compuesta(Compuesta1)
+                Compuesta_ = Compuesta1
+                f.fijaCodigo(Compuesta.arb)
+                Funciones.append(f)
+                TDS.salFuncion()
+            except mc_error_sintaxis, (mc_nt, mc_t):
+                if errsintactico.trataError(mc_al, mc_nt, "<Funcion>"):
+                  mc_reintentar()
+                else:
+                  f= TDS.enFuncion()
+                  if f:
+                    try:
+                      t= f.tipoDevuelto
+                    except AttributeError:
+                      f.fijaPerfil([], tipos.Error)
+                    TDS.salFuncion()
+        self.mc_reintento.pop()
+    def mc_analiza_Globales(self, Globales):
+        mc_al = self.mc_al
+        self.mc_reintento.append(True)
+        mc_reintentar= self.mc_reintentar
+        while self.mc_reintento[-1]:
+            self.mc_reintento[-1]= False
+            try:
+                if not mc_al.actual.cat == u'globales':
+                    mc_error('<Globales>', [ u'globales' ])
+                Definicion = Definicion1 = Atributos()
+                globales = globales1 = globales_ = mc_al.actual
+                mc_al.avanza()
+                Definicion.variables= VariablesGlobales
+                while True:
+                    self.mc_analiza_Definicion(Definicion1)
+                    Definicion_ = Definicion1
+                    if mc_al.actual.cat == u'!;':
+                        mc_al.avanza()
+                    else:
+                        mc_error('<Globales>', [u'!;'])
+                    if mc_al.actual.cat != u'id': break
+                if not mc_al.actual.cat == u'fin':
+                    mc_error('<Globales>',[ u'id' ])
+                if mc_al.actual.cat == u'fin':
+                    fin = fin1 = fin_ = mc_al.actual
+                    mc_al.avanza()
+                else:
+                    mc_error('<Globales>', [u'fin'])
+            except mc_error_sintaxis, (mc_nt, mc_t):
+                if errsintactico.trataError(mc_al, mc_nt, "<Globales>"):
+                  mc_reintentar()
+        self.mc_reintento.pop()
+    def mc_analiza_Llamada(self, Llamada):
+        mc_al = self.mc_al
+        if not mc_al.actual.cat == u'llama':
+            mc_error('<Llamada>', [ u'llama' ])
+        Expresion = Expresion1 = Atributos()
+        Expresion2 = Atributos()
+        llama = llama1 = llama_ = mc_al.actual
+        mc_al.avanza()
+        if mc_al.actual.cat == u'id':
+            id = id1 = id_ = mc_al.actual
+            mc_al.avanza()
+        else:
+            mc_error('<Llamada>', [u'id'])
+        if mc_al.actual.cat == u'!(':
+            mc_al.avanza()
+        else:
+            mc_error('<Llamada>', [u'!('])
+        l=[]
+        if mc_al.actual.cat in [ u'!(', 'cad', 'id', 'llama', 'num' ]:
+            self.mc_analiza_Expresion(Expresion1)
+            Expresion_ = Expresion1
+            l.append(Expresion_.arb)
+            while mc_al.actual.cat == u'!,':
+                mc_al.avanza()
+                self.mc_analiza_Expresion(Expresion2)
+                Expresion_ = Expresion2
+                l.append(Expresion_.arb)
+            if not mc_al.actual.cat == u'!)':
+                mc_error('<Llamada>',[ u'!)', '!,' ])
+        if mc_al.actual.cat == u'!)':
+            mc_al.avanza()
+        else:
+            mc_error('<Llamada>', [u'!)'])
+        if not TDS.existe(id.lexema):
+          f= TDS.recupera(funcionError)
+          errores.semantico("La función %s no está definida." % id.lexema, id.nlinea)
+        else:
+          f= TDS.recupera(id.lexema)
+        Llamada.arb= AST.NodoLlamada(f, l, llama.nlinea)
+    def mc_analiza_Perfil(self, Perfil):
+        mc_al = self.mc_al
+        if not mc_al.actual.cat == u'!(':
+            mc_error('<Perfil>', [ u'!(' ])
+        Definicion = Definicion1 = Atributos()
+        Definicion2 = Atributos()
+        Tipo = Tipo1 = Atributos()
+        Perfil.parametros= []
+        mc_al.avanza()
+        if mc_al.actual.cat == u'id':
+            Definicion.variables= Perfil.parametros
+            self.mc_analiza_Definicion(Definicion1)
+            Definicion_ = Definicion1
+            while mc_al.actual.cat == u'!;':
+                mc_al.avanza()
+                Definicion2.variables= Perfil.parametros
+                self.mc_analiza_Definicion(Definicion2)
+                Definicion_ = Definicion2
+            if not mc_al.actual.cat == u'!)':
+                mc_error('<Perfil>',[ u'!)', '!;' ])
+        if mc_al.actual.cat == u'!)':
+            mc_al.avanza()
+        else:
+            mc_error('<Perfil>', [u'!)'])
+        if mc_al.actual.cat == u'!:':
+            mc_al.avanza()
+        else:
+            mc_error('<Perfil>', [u'!:'])
+        self.mc_analiza_Tipo(Tipo1)
+        Tipo_ = Tipo1
+        Perfil.tipo= Tipo.tipo
+    def mc_analiza_Producto(self, Producto):
+        mc_al = self.mc_al
+        if not mc_al.actual.cat in [ u'!(', 'cad', 'id', 'llama', 'num' ]:
+            mc_error('<Producto>', [ u'!(', 'cad', 'id', 'llama', 'num' ])
+        Termino = Termino1 = Atributos()
+        Termino2 = Atributos()
+        self.mc_analiza_Termino(Termino1)
+        Termino_ = Termino1
+        arb= Termino.arb
+        while mc_al.actual.cat == u'opmul':
+            opmul = opmul1 = opmul_ = mc_al.actual
+            mc_al.avanza()
+            self.mc_analiza_Termino(Termino2)
+            Termino_ = Termino2
+            arb= AST.NodoAritmetica(opmul.lexema, arb, Termino_.arb, opmul.nlinea)
+        if not mc_al.actual.cat in [ u'!)', '!,', '!;', '!]', 'entonces', 'opad', 'opcom' ]:
+            mc_error('<Producto>',[ u'!)', '!,', '!;', '!]', 'entonces', 'opad', 'opcom', 'opmul' ])
+        Producto.arb= arb
+    def mc_analiza_Programa(self, Programa):
+        mc_al = self.mc_al
+        self.mc_reintento.append(True)
+        mc_reintentar= self.mc_reintentar
+        while self.mc_reintento[-1]:
+            self.mc_reintento[-1]= False
+            try:
+                if not mc_al.actual.cat in [ u'funcion', 'globales', 'secuencia' ]:
+                    mc_error('<Programa>', [ u'funcion', 'globales', 'secuencia' ])
+                Globales = Globales1 = Atributos()
+                Funcion = Funcion1 = Atributos()
+                Compuesta = Compuesta1 = Atributos()
+                if mc_al.actual.cat == u'globales':
+                    self.mc_analiza_Globales(Globales1)
+                    Globales_ = Globales1
+                while mc_al.actual.cat == u'funcion':
+                    self.mc_analiza_Funcion(Funcion1)
+                    Funcion_ = Funcion1
+                if not mc_al.actual.cat == u'secuencia':
+                    mc_error('<Programa>',[ u'funcion', 'secuencia' ])
+                self.mc_analiza_Compuesta(Compuesta1)
+                Compuesta_ = Compuesta1
+                Programa.principal= Compuesta.arb
+            except mc_error_sintaxis, (mc_nt, mc_t):
+                if errsintactico.trataError(mc_al, mc_nt, "<Programa>"):
+                  mc_reintentar()
+                else:
+                  Programa.principal= AST.NodoVacio(mc_al.linea())
+        self.mc_reintento.pop()
+    def mc_analiza_Sentencia(self, Sentencia):
+        mc_al = self.mc_al
+        self.mc_reintento.append(True)
+        mc_reintentar= self.mc_reintentar
+        while self.mc_reintento[-1]:
+            self.mc_reintento[-1]= False
+            try:
+                if not mc_al.actual.cat in [ u'devuelve', 'escribe', 'id', 'nl', 'secuencia', 'si' ]:
+                    mc_error('<Sentencia>', [ u'devuelve', 'escribe', 'id', 'nl', 'secuencia', 'si' ])
+                if mc_al.actual.cat == u'secuencia':
+                    Compuesta = Compuesta1 = Atributos()
+                    self.mc_analiza_Compuesta(Compuesta1)
+                    Compuesta_ = Compuesta1
+                    Sentencia.arb= Compuesta.arb
+                elif mc_al.actual.cat == u'escribe':
+                    Expresion = Expresion1 = Atributos()
+                    escribe = escribe1 = escribe_ = mc_al.actual
+                    mc_al.avanza()
+                    self.mc_analiza_Expresion(Expresion1)
+                    Expresion_ = Expresion1
+                    if mc_al.actual.cat == u'!;':
+                        mc_al.avanza()
+                    else:
+                        mc_error('<Sentencia>', [u'!;'])
+                    Sentencia.arb= AST.NodoEscribe(Expresion.arb, escribe.nlinea)
+                elif mc_al.actual.cat == u'nl':
+                    nl = nl1 = nl_ = mc_al.actual
+                    mc_al.avanza()
+                    if mc_al.actual.cat == u'!;':
+                        mc_al.avanza()
+                    else:
+                        mc_error('<Sentencia>', [u'!;'])
+                    Sentencia.arb= AST.NodoEscribe(AST.NodoCadena(cadenaNL, nl.nlinea),nl.nlinea)
+                elif mc_al.actual.cat == u'si':
+                    Expresion = Expresion1 = Atributos()
+                    Sentencia1 = Atributos()
+                    Sentencia2 = Atributos()
+                    si = si1 = si_ = mc_al.actual
+                    mc_al.avanza()
+                    self.mc_analiza_Expresion(Expresion1)
+                    Expresion_ = Expresion1
+                    if mc_al.actual.cat == u'entonces':
+                        entonces = entonces1 = entonces_ = mc_al.actual
+                        mc_al.avanza()
+                    else:
+                        mc_error('<Sentencia>', [u'entonces'])
+                    self.mc_analiza_Sentencia(Sentencia1)
+                    Sentencia_ = Sentencia1
+                    if mc_al.actual.cat == u'si_no':
+                        si_no = si_no1 = si_no_ = mc_al.actual
+                        mc_al.avanza()
+                    else:
+                        mc_error('<Sentencia>', [u'si_no'])
+                    self.mc_analiza_Sentencia(Sentencia2)
+                    Sentencia_ = Sentencia2
+                    if mc_al.actual.cat == u'fin':
+                        fin = fin1 = fin_ = mc_al.actual
+                        mc_al.avanza()
+                    else:
+                        mc_error('<Sentencia>', [u'fin'])
+                    Sentencia.arb= AST.NodoSi(Expresion.arb, Sentencia1.arb, Sentencia2.arb, si.nlinea)
+                elif mc_al.actual.cat == u'id':
+                    AccesoVariable = AccesoVariable1 = Atributos()
+                    Expresion = Expresion1 = Atributos()
+                    nlinea= mc_al.linea()
+                    self.mc_analiza_AccesoVariable(AccesoVariable1)
+                    AccesoVariable_ = AccesoVariable1
+                    if mc_al.actual.cat == u'!:=':
+                        mc_al.avanza()
+                    else:
+                        mc_error('<Sentencia>', [u'!:='])
+                    self.mc_analiza_Expresion(Expresion1)
+                    Expresion_ = Expresion1
+                    if mc_al.actual.cat == u'!;':
+                        mc_al.avanza()
+                    else:
+                        mc_error('<Sentencia>', [u'!;'])
+                    Sentencia.arb= AST.NodoAsignacion(AccesoVariable.arb, Expresion.arb, nlinea)
+                else:
+                    Expresion = Expresion1 = Atributos()
+                    devuelve = devuelve1 = devuelve_ = mc_al.actual
+                    mc_al.avanza()
+                    self.mc_analiza_Expresion(Expresion1)
+                    Expresion_ = Expresion1
+                    if mc_al.actual.cat == u'!;':
+                        mc_al.avanza()
+                    else:
+                        mc_error('<Sentencia>', [u'!;'])
+                    f= TDS.enFuncion()
+                    if not f:
+                      errores.semantico("Sólo puede aparecer devuelve dentro de una función.",
+                        devuelve.nlinea)
+                      f= TDS.recupera(funcionError)
+                    Sentencia.arb= AST.NodoDevuelve(Expresion.arb, f, devuelve.nlinea)
+            except mc_error_sintaxis, (mc_nt, mc_t):
+                if errsintactico.trataError(mc_al, mc_nt, "<Sentencia>"):
+                  mc_reintentar()
+                else:
+                  Sentencia.arb= AST.NodoVacio(mc_al.linea())
+        self.mc_reintento.pop()
+    def mc_analiza_Termino(self, Termino):
+        mc_al = self.mc_al
+        if not mc_al.actual.cat in [ u'!(', 'cad', 'id', 'llama', 'num' ]:
+            mc_error('<Termino>', [ u'!(', 'cad', 'id', 'llama', 'num' ])
+        AccesoVariable = AccesoVariable1 = Atributos()
+        Llamada = Llamada1 = Atributos()
+        Expresion = Expresion1 = Atributos()
+        if mc_al.actual.cat == u'id':
+            self.mc_analiza_AccesoVariable(AccesoVariable1)
+            AccesoVariable_ = AccesoVariable1
+            Termino.arb= AccesoVariable.arb
+        elif mc_al.actual.cat == u'llama':
+            self.mc_analiza_Llamada(Llamada1)
+            Llamada_ = Llamada1
+            Termino.arb= Llamada.arb
+        elif mc_al.actual.cat == u'num':
+            num = num1 = num_ = mc_al.actual
+            mc_al.avanza()
+            Termino.arb= AST.NodoEntero(num.valor, num.nlinea)
+        elif mc_al.actual.cat == u'!(':
+            mc_al.avanza()
+            self.mc_analiza_Expresion(Expresion1)
+            Expresion_ = Expresion1
+            if mc_al.actual.cat == u'!)':
+                mc_al.avanza()
+            else:
+                mc_error('<Termino>', [u'!)'])
+            Termino.arb= Expresion.arb
+        else:
+            cad = cad1 = cad_ = mc_al.actual
+            mc_al.avanza()
+            c= cadenas.Cadena(cad.valor)
+            Termino.arb= AST.NodoCadena(c, cad.nlinea)
+            Cadenas.append(c)
+    def mc_analiza_Tipo(self, Tipo):
+        mc_al = self.mc_al
+        if not mc_al.actual.cat in [ u'cadena', 'entero', 'vector' ]:
+            mc_error('<Tipo>', [ u'cadena', 'entero', 'vector' ])
+        if mc_al.actual.cat == u'entero':
+            entero = entero1 = entero_ = mc_al.actual
+            mc_al.avanza()
+            Tipo.tipo= tipos.Entero
+        elif mc_al.actual.cat == u'cadena':
+            cadena = cadena1 = cadena_ = mc_al.actual
+            mc_al.avanza()
+            Tipo.tipo= tipos.Cadena
+        else:
+            Tipo1 = Atributos()
+            vector = vector1 = vector_ = mc_al.actual
+            mc_al.avanza()
+            if mc_al.actual.cat == u'![':
+                mc_al.avanza()
+            else:
+                mc_error('<Tipo>', [u'!['])
+            if mc_al.actual.cat == u'num':
+                num = num1 = num_ = mc_al.actual
+                mc_al.avanza()
+            else:
+                mc_error('<Tipo>', [u'num'])
+            if mc_al.actual.cat == u'!]':
+                mc_al.avanza()
+            else:
+                mc_error('<Tipo>', [u'!]'])
+            if mc_al.actual.cat == u'de':
+                de = de1 = de_ = mc_al.actual
+                mc_al.avanza()
+            else:
+                mc_error('<Tipo>', [u'de'])
+            self.mc_analiza_Tipo(Tipo1)
+            Tipo_ = Tipo1
+            Tipo.tipo= tipos.Array(num.valor, Tipo1.tipo)
+if __name__ == '__main__':
+    try:
+        mc_main = main
+    except NameError:
+        def mc_main():
+            AnalizadorSintactico(sys.stdin)
+    mc_main()
