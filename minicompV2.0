@@ -223,10 +223,7 @@ class AnalizadorLexico:
                         if q < 3:
                             uf = (u'!:', None)
                             ufi = i
-                            if u'=' == c:
-                                q = 21
-                            else:
-                                break
+                            break
                         else:
                             if q < 4:
                                 uf = (u'opad', None)
@@ -245,7 +242,7 @@ class AnalizadorLexico:
                         else:
                             if q < 7:
                                 if u'=' == c:
-                                    q = 17
+                                    q = 18
                                 else:
                                     break
                             else:
@@ -267,7 +264,7 @@ class AnalizadorLexico:
                                     q = 8
                             else:
                                 if c < u'#':
-                                    q = 20
+                                    q = 19
                                 else:
                                     q = 8
                         else:
@@ -290,7 +287,7 @@ class AnalizadorLexico:
                             uf = (u'opmul', None)
                             ufi = i
                             if u'/' == c:
-                                q = 18
+                                q = 20
                             else:
                                 break
                     else:
@@ -298,7 +295,7 @@ class AnalizadorLexico:
                             uf = (u'opcom', None)
                             ufi = i
                             if u'=' == c:
-                                q = 17
+                                q = 18
                             else:
                                 break
                         else:
@@ -327,29 +324,32 @@ class AnalizadorLexico:
                             break
                         else:
                             if q < 18:
+                                uf = (u'!=', None)
+                                ufi = i
+                                if u'=' == c:
+                                    q = 18
+                                else:
+                                    break
+                            else:
                                 uf = (u'opcom', None)
                                 ufi = i
                                 break
-                            else:
-                                if c < '\n':
-                                    q = 18
-                                else:
-                                    if c < u'\x0b':
-                                        q = 19
-                                    else:
-                                        q = 18
                     else:
                         if q < 20:
-                            uf = (None, None)
+                            uf = (u'cad', trataCad)
                             ufi = i
                             break
                         else:
                             if q < 21:
-                                uf = (u'cad', trataCad)
-                                ufi = i
-                                break
+                                if c < '\n':
+                                    q = 20
+                                else:
+                                    if c < u'\x0b':
+                                        q = 21
+                                    else:
+                                        q = 20
                             else:
-                                uf = (u'!:=', None)
+                                uf = (None, None)
                                 ufi = i
                                 break
             i += 1
@@ -459,7 +459,7 @@ mc_primeros = {
     '<Tipo>' : [u'cadena', u'vector', u'entero'],
 }
 mc_siguientes = {
-    '<AccesoVariable>' : [u'opad', u'!)', u'!,', u'entonces', u'opcom', u'!:=', u'opmul', u'!;', u'!]'],
+    '<AccesoVariable>' : [u'opad', u'!)', u'!]', u'!,', u'entonces', u'opcom', u'opmul', u'!;', u'!='],
     '<Comparado>' : [u'!)', u'!,', u'entonces', u'opcom', u'!;', u'!]'],
     '<Compuesta>' : [u'secuencia', u'nl', u'escribe', 'mc_EOF', u'si', u'si_no', u'devuelve', u'fin', u'id', u'funcion'],
     '<Definicion>' : [u'!)', u'!;'],
@@ -559,8 +559,8 @@ class AnalizadorSintactico:
             else:
                 mc_error('<AccesoVariable>', [u'!]'])
             arb= AST.NodoAccesoVector(arb, Expresion.arb, nlinea)
-        if not mc_al.actual.cat in [ u'!)', '!,', '!:=', '!;', '!]', 'entonces', 'opad', 'opcom', 'opmul' ]:
-            mc_error('<AccesoVariable>',[ u'!)', '!,', '!:=', '!;', '![', '!]', 'entonces', 'opad', 'opcom', 'opmul' ])
+        if not mc_al.actual.cat in [ u'!)', '!,', '!;', '!=', '!]', 'entonces', 'opad', 'opcom', 'opmul' ]:
+            mc_error('<AccesoVariable>',[ u'!)', '!,', '!;', '!=', '![', '!]', 'entonces', 'opad', 'opcom', 'opmul' ])
         AccesoVariable.arb= arb
     def mc_analiza_Comparado(self, Comparado):
         mc_al = self.mc_al
@@ -948,10 +948,10 @@ class AnalizadorSintactico:
                     nlinea= mc_al.linea()
                     self.mc_analiza_AccesoVariable(AccesoVariable1)
                     AccesoVariable_ = AccesoVariable1
-                    if mc_al.actual.cat == u'!:=':
+                    if mc_al.actual.cat == u'!=':
                         mc_al.avanza()
                     else:
-                        mc_error('<Sentencia>', [u'!:='])
+                        mc_error('<Sentencia>', [u'!='])
                     self.mc_analiza_Expresion(Expresion1)
                     Expresion_ = Expresion1
                     if mc_al.actual.cat == u'!;':

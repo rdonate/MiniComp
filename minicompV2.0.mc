@@ -3,7 +3,7 @@ None	None         //[^\n]*\n
 cad	trataCad     "[^"\n]*"
 id	trataId	     [a-zA-Z][a-zA-Z0-9_]*
 num	trataEntero  [0-9]+
-opcom   None         [<>]=?|!?=
+opcom   None         [<>]=?|[=!]=
 opad	None	     [-+]
 opmul	None	     [*/%]
 
@@ -172,7 +172,7 @@ $mc_al.sincroniza(["mc_EOF"])$
 
 <Sentencia> ->
   @nlinea= mc_al.linea()@
-  <AccesoVariable> ":=" <Expresion> ";"
+  <AccesoVariable> "=" <Expresion> ";"
   @Sentencia.arb= AST.NodoAsignacion(AccesoVariable.arb, Expresion.arb, nlinea)@
   ;
 
