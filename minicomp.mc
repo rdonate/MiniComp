@@ -30,8 +30,8 @@ _reservadas=ImmutableSet(["cadena", "de", "devuelve",
         "nl", "secuencia", "si", "si_no", "vector"])
 
 def trataId(c):
-  if c.lexema in _reservadas:
-    c.cat= c.lexema
+  if c.lexema in _reservadas or c.lexema in _reservadas.upper():
+    c.cat= c.lexema.lower()
 
 def trataEntero(c):
   try:
