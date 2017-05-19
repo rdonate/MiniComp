@@ -1,6 +1,6 @@
 None	None         [ \t\n]+
 None	None         //[^\n]*\n
-cad	trataCad     "([^"\n\t\"\\]*|(\[nt"\]))*"
+cad	trataCad     "([^"\n\t\\]*|\\[nt"\\])*"
 id	trataId	     [a-zA-Z][a-zA-Z0-9_]*
 num	trataEntero  [0-9]+
 opcom   None         [<>]=?|[=!]=
@@ -23,6 +23,8 @@ import variables
 
 def trataCad(c):
   c.valor= c.lexema[1:-1]
+  if "\\" in c.valor:
+    print "Esto es una prueba"
 
 _reservadas=ImmutableSet(["cadena", "de", "devuelve",
         "entero", "entonces", "es", "escribe", "fin",
@@ -30,8 +32,11 @@ _reservadas=ImmutableSet(["cadena", "de", "devuelve",
         "nl", "secuencia", "si", "si_no", "vector"])
 
 def trataId(c):
-  if c.lexema in _reservadas or (c.lexema.lower() in _reservadas and c.lexema.upper()==c.lexema):
-    c.cat= c.lexema.lower()
+  try:
+    if c.lexema in _reservadas or (c.lexema.lower() in _reservadas and c.lexema.upper()==c.lexema):
+      c.cat= c.lexema.lower()
+  except:
+    errores.lexico("Solo se pueden utilizar las palabras reservadas en mayusculas o minusculas.")
 
 def trataEntero(c):
   try:

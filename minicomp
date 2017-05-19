@@ -398,13 +398,19 @@ import tipos
 import variables
 def trataCad(c):
   c.valor= c.lexema[1:-1]
+  if "\\" in c.valor:
+    pass
+    #print "Esto es una prueba"
 _reservadas=ImmutableSet(["cadena", "de", "devuelve",
         "entero", "entonces", "es", "escribe", "fin",
         "funcion", "globales", "llama",  "locales",
         "nl", "secuencia", "si", "si_no", "vector"])
 def trataId(c):
-  if c.lexema in _reservadas or (c.lexema.lower() in _reservadas and c.lexema.upper()==c.lexema):
-    c.cat= c.lexema.lower()
+  try:
+    if c.lexema in _reservadas or (c.lexema.lower() in _reservadas and c.lexema.upper()==c.lexema):
+      c.cat= c.lexema.lower()
+  except:
+    errores.lexico("Solo se pueden utilizar las palabras reservadas en mayusculas o minusculas.")
 def trataEntero(c):
   try:
     c.valor= int(c.lexema)

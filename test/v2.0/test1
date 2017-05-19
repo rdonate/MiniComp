@@ -1,4 +1,10 @@
+globales
+    a: cadena;
+
+fin
 secuencia
+    a="aaa";
 	ESCRIBE "aaaaa";
+	escribe "\\a\na";
 	nl;
 fin
