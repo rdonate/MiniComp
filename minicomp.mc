@@ -1,9 +1,9 @@
 None	None         [ \t\n]+
 None	None         //[^\n]*\n
-cad	trataCad     "[^"\n]*"
+cad	trataCad     "([^"\n\t\\]*|\\[nt"\\])*"
 id	trataId	     [a-zA-Z][a-zA-Z0-9_]*
 num	trataEntero  [0-9]+
-opcom   None         [<>]=?|!?=
+opcom   None         [<>]=?|[=!]=
 opad	None	     [-+]
 opmul	None	     [*/%]
 
@@ -23,6 +23,10 @@ import variables
 
 def trataCad(c):
   c.valor= c.lexema[1:-1]
+  c.valor=c.valor.replace('\\\\','\\')
+  c.valor=c.valor.replace('\\n','\n')
+  c.valor=c.valor.replace('\\"','\"')
+  c.valor=c.valor.replace('\t','\t')
 
 _reservadas=ImmutableSet(["cadena", "de", "devuelve",
         "entero", "entonces", "es", "escribe", "fin",
@@ -30,8 +34,11 @@ _reservadas=ImmutableSet(["cadena", "de", "devuelve",
         "nl", "secuencia", "si", "si_no", "vector"])
 
 def trataId(c):
-  if c.lexema in _reservadas:
-    c.cat= c.lexema
+  try:
+    if c.lexema in _reservadas or (c.lexema.lower() in _reservadas and c.lexema.upper()==c.lexema):
+      c.cat= c.lexema.lower()
+  except:
+    errores.lexico("Solo se pueden utilizar las palabras reservadas en mayusculas o minusculas.")
 
 def trataEntero(c):
   try:
@@ -172,7 +179,7 @@ $mc_al.sincroniza(["mc_EOF"])$
 
 <Sentencia> ->
   @nlinea= mc_al.linea()@
-  <AccesoVariable> ":=" <Expresion> ";"
+  <AccesoVariable> "=" <Expresion> ";"
   @Sentencia.arb= AST.NodoAsignacion(AccesoVariable.arb, Expresion.arb, nlinea)@
   ;
 
