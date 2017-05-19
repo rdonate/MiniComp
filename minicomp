@@ -242,7 +242,7 @@ class AnalizadorLexico:
                         else:
                             if q < 7:
                                 if u'=' == c:
-                                    q = 18
+                                    q = 21
                                 else:
                                     break
                             else:
@@ -254,19 +254,25 @@ class AnalizadorLexico:
                                     break
                     else:
                         if q < 9:
-                            if c < u'"':
+                            if c < u'#':
                                 if c < u'\x0b':
-                                    if c <= u'\t':
+                                    if c <= u'\x08':
                                         q = 8
                                     else:
                                         break
                                 else:
-                                    q = 8
+                                    if c < u'"':
+                                        q = 8
+                                    else:
+                                        q = 20
                             else:
-                                if c < u'#':
-                                    q = 19
-                                else:
+                                if c < u'\\':
                                     q = 8
+                                else:
+                                    if c < u']':
+                                        q = 19
+                                    else:
+                                        q = 8
                         else:
                             if q < 10:
                                 uf = (u'!)', None)
@@ -277,77 +283,101 @@ class AnalizadorLexico:
                                 ufi = i
                                 break
             else:
-                if q < 16:
-                    if q < 13:
+                if q < 17:
+                    if q < 14:
                         if q < 12:
                             uf = (u'!,', None)
                             ufi = i
                             break
                         else:
-                            uf = (u'opmul', None)
-                            ufi = i
-                            if u'/' == c:
-                                q = 20
-                            else:
-                                break
-                    else:
-                        if q < 14:
-                            uf = (u'opcom', None)
-                            ufi = i
-                            if u'=' == c:
-                                q = 18
-                            else:
-                                break
-                        else:
-                            if q < 15:
-                                uf = (None, None)
+                            if q < 13:
+                                uf = (u'opmul', None)
                                 ufi = i
-                                if c < u' ':
-                                    if u'\t' <= c <= u'\n':
-                                        q = 14
-                                    else:
-                                        break
-                                else:
-                                    if c <= u' ':
-                                        q = 14
-                                    else:
-                                        break
-                            else:
-                                uf = (u'!;', None)
-                                ufi = i
-                                break
-                else:
-                    if q < 19:
-                        if q < 17:
-                            uf = (u'opmul', None)
-                            ufi = i
-                            break
-                        else:
-                            if q < 18:
-                                uf = (u'!=', None)
-                                ufi = i
-                                if u'=' == c:
+                                if u'/' == c:
                                     q = 18
                                 else:
                                     break
                             else:
                                 uf = (u'opcom', None)
                                 ufi = i
-                                break
+                                if u'=' == c:
+                                    q = 21
+                                else:
+                                    break
                     else:
-                        if q < 20:
+                        if q < 15:
+                            uf = (None, None)
+                            ufi = i
+                            if c < u' ':
+                                if u'\t' <= c <= u'\n':
+                                    q = 14
+                                else:
+                                    break
+                            else:
+                                if c <= u' ':
+                                    q = 14
+                                else:
+                                    break
+                        else:
+                            if q < 16:
+                                uf = (u'!;', None)
+                                ufi = i
+                                break
+                            else:
+                                uf = (u'opmul', None)
+                                ufi = i
+                                break
+                else:
+                    if q < 20:
+                        if q < 18:
+                            uf = (u'!=', None)
+                            ufi = i
+                            if u'=' == c:
+                                q = 21
+                            else:
+                                break
+                        else:
+                            if q < 19:
+                                if c < '\n':
+                                    q = 18
+                                else:
+                                    if c < u'\x0b':
+                                        q = 22
+                                    else:
+                                        q = 18
+                            else:
+                                if c < u'n':
+                                    if c < u'\\':
+                                        if u'"' == c:
+                                            q = 8
+                                        else:
+                                            break
+                                    else:
+                                        if c <= u'\\':
+                                            q = 8
+                                        else:
+                                            break
+                                else:
+                                    if c < u't':
+                                        if c <= u'n':
+                                            q = 8
+                                        else:
+                                            break
+                                    else:
+                                        if c <= u't':
+                                            q = 8
+                                        else:
+                                            break
+                    else:
+                        if q < 21:
                             uf = (u'cad', trataCad)
                             ufi = i
                             break
                         else:
-                            if q < 21:
-                                if c < '\n':
-                                    q = 20
-                                else:
-                                    if c < u'\x0b':
-                                        q = 21
-                                    else:
-                                        q = 20
+                            if q < 22:
+                                uf = (u'opcom', None)
+                                ufi = i
+                                break
                             else:
                                 uf = (None, None)
                                 ufi = i
@@ -373,8 +403,8 @@ _reservadas=ImmutableSet(["cadena", "de", "devuelve",
         "funcion", "globales", "llama",  "locales",
         "nl", "secuencia", "si", "si_no", "vector"])
 def trataId(c):
-  if c.lexema in _reservadas:
-    c.cat= c.lexema
+  if c.lexema in _reservadas or (c.lexema.lower() in _reservadas and c.lexema.upper()==c.lexema):
+    c.cat= c.lexema.lower()
 def trataEntero(c):
   try:
     c.valor= int(c.lexema)

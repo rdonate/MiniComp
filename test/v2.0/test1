@@ -1,0 +1,4 @@
+secuencia
+	ESCRIBE "aaaaa";
+	nl;
+fin

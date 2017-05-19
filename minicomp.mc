@@ -1,6 +1,6 @@
 None	None         [ \t\n]+
 None	None         //[^\n]*\n
-cad	trataCad     "[^"\n]*"
+cad	trataCad     "([^"\n\t\"\\]*|(\[nt"\]))*"
 id	trataId	     [a-zA-Z][a-zA-Z0-9_]*
 num	trataEntero  [0-9]+
 opcom   None         [<>]=?|[=!]=
@@ -30,7 +30,7 @@ _reservadas=ImmutableSet(["cadena", "de", "devuelve",
         "nl", "secuencia", "si", "si_no", "vector"])
 
 def trataId(c):
-  if c.lexema in _reservadas or c.lexema in _reservadas.upper():
+  if c.lexema in _reservadas or (c.lexema.lower() in _reservadas and c.lexema.upper()==c.lexema):
     c.cat= c.lexema.lower()
 
 def trataEntero(c):
