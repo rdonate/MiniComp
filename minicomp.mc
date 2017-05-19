@@ -23,8 +23,10 @@ import variables
 
 def trataCad(c):
   c.valor= c.lexema[1:-1]
-  if "\\" in c.valor:
-    print "Esto es una prueba"
+  c.valor=c.valor.replace('\\\\','\\')
+  c.valor=c.valor.replace('\\n','\n')
+  c.valor=c.valor.replace('\\"','\"')
+  c.valor=c.valor.replace('\t','\t')
 
 _reservadas=ImmutableSet(["cadena", "de", "devuelve",
         "entero", "entonces", "es", "escribe", "fin",
