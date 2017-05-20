@@ -4,6 +4,7 @@ import etiquetas
 import memoria
 import BancoRegistros
 registros= BancoRegistros.BancoRegistros()
+registrosReales=BancoRegistros.BancoRegistros()
 
 import Rossi
 R= Rossi
@@ -105,13 +106,16 @@ class NodoEscribe(AST):
   def generaCodigo(self, c):
     c.append(R.Comentario("Escribe, linea %d" % self.linea))
     r= self.exp.generaCodigo(c)
-    c.append(R.add("a0", r, "zero"))
+    if self.exp.tipo==tipos.Real:
+      c.append(R.fadd("fa", r, "fzero"))
+    else:
+      c.append(R.add("a0", r, "zero"))
     if self.exp.tipo== tipos.Entero:
       c.append(R.addi("sc", "zero", 0, "Escribe entero"))
     elif self.exp.tipo== tipos.Cadena:
       c.append(R.addi("sc", "zero", 2, "Escribe cadena"))
     elif self.exp.tipo== tipos.Real:
-      c.append(R.faddi("sc", "zero", 2, "Escribe real"))
+      c.append(R.addi("sc", "zero", 1, "Escribe real"))
     c.append(R.syscall())
     registros.libera(r)
 
@@ -196,18 +200,35 @@ class NodoAritmetica(AST):
 
   def generaCodigo(self, c):
     iz= self.izdo.generaCodigo(c)
+    if not self.izdo.tipo==self.tipo:
+      izR=registrosReales.reserva()
+      c.append(R.tofloat(izR,iz,"Cambio a real de iz"))
     de= self.dcho.generaCodigo(c)
-    if self.op== "+":
-      c.append(R.add(iz, iz, de))
-    elif self.op== "-":
-      c.append(R.sub(iz, iz, de))
-    elif self.op== "*":
-      c.append(R.mult(iz, iz, de))
-    elif self.op== "/":
-      c.append(R.div(iz, iz, de))
-    elif self.op== "%":
-      c.append(R.mod(iz, iz, de))
-    registros.libera(de)
+    if not self.izdo.tipo==self.tipo:
+      deR=registrosReales.reserva()
+      c.append(R.tofloat(deR,de,"Cambio a real de de"))
+    if self.tipo==tipos.Real:
+      if self.op == "+":
+        c.append(R.fadd(iz, iz, de))
+      elif self.op == "-":
+        c.append(R.fsub(iz, iz, de))
+      elif self.op == "*":
+        c.append(R.fmult(iz, iz, de))
+      elif self.op == "/":
+        c.append(R.fdiv(iz, iz, de))
+      registrosReales.libera(de)
+    else:
+      if self.op== "+":
+        c.append(R.add(iz, iz, de))
+      elif self.op== "-":
+        c.append(R.sub(iz, iz, de))
+      elif self.op== "*":
+        c.append(R.mult(iz, iz, de))
+      elif self.op== "/":
+        c.append(R.div(iz, iz, de))
+      elif self.op== "%":
+        c.append(R.mod(iz, iz, de))
+      registros.libera(de)
     return iz
 
   def arbol(self):
@@ -239,8 +260,8 @@ class NodoReal(AST):
     self.tipo= tipos.Real
 
   def generaCodigo(self, c):
-    r= registros.reserva()
-    c.append(R.faddi(r, "zero", self.valor, "Valor real"))
+    r= registrosReales.reserva()
+    c.append(R.faddi(r, "fzero", self.valor, "Valor real"))
     return r
 
   def arbol(self):
@@ -375,7 +396,7 @@ class NodoAccesoVector(AST):
     base= self.izda.generaDir(c)
     desp= self.exp.generaCodigo(c)
     if self.tipo.talla()> 1:
-      c.append(R.multi(desp, desp, self.tipo.talla(), "Tama�o del %s" % self.tipo))
+      c.append(R.multi(desp, desp, self.tipo.talla(), "Tamaño del %s" % self.tipo))
     c.append(R.add(base, base, desp))
     registros.libera(desp)
     return base

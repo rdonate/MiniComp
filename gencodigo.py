@@ -6,6 +6,7 @@ import sys
 def inicializaRegistros(c):
   c.append(R.addi("sp", "zero", memoria._dirLibre))
   c.append(R.add("fp", "zero", "zero"))
+  c.append(R.fadd("fa", "fzero", "fzero"))
 
 def gencodigo(principal, funciones, cadenas, variables):
   memoria.asignaDir(variables)

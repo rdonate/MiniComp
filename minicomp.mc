@@ -30,7 +30,7 @@ def trataCad(c):
   c.valor=c.valor.replace('\t','\t')
 
 _reservadas=ImmutableSet(["cadena", "de", "devuelve",
-        "entero", "entonces", "es", "escribe", "fin",
+        "entero","real", "entonces", "es", "escribe", "fin",
         "funcion", "globales", "llama",  "locales",
         "nl", "secuencia", "si", "si_no", "vector"])
 
