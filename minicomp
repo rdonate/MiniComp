@@ -483,7 +483,7 @@ def trataEntero(c):
     errores.lexico("No he podido convertir %s en un entero." % c.lexema, c.nlinea)
 def trataReal(c):
   try:
-    c.valor= float(c.lexema)
+    c.valor=float(c.lexema)
   except:
     errores.lexico("No he podido convertir %s en un real." % c.lexema, c.nlinea)
 def error_lexico(linea, cars):

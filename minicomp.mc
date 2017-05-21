@@ -49,7 +49,7 @@ def trataEntero(c):
 
 def trataReal(c):
   try:
-    c.valor= float(c.lexema)
+    c.valor=float(c.lexema)
   except:
     errores.lexico("No he podido convertir %s en un real." % c.lexema, c.nlinea)
 

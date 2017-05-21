@@ -107,9 +107,9 @@ class NodoEscribe(AST):
     c.append(R.Comentario("Escribe, linea %d" % self.linea))
     r= self.exp.generaCodigo(c)
     if self.exp.tipo==tipos.Real:
-      c.append(R.fadd("fa", r, "fzero"))
+      pass
     else:
-      c.append(R.add("a0", r, "zero"))
+      pass
     if self.exp.tipo== tipos.Entero:
       c.append(R.addi("sc", "zero", 0, "Escribe entero"))
     elif self.exp.tipo== tipos.Cadena:
@@ -117,7 +117,10 @@ class NodoEscribe(AST):
     elif self.exp.tipo== tipos.Real:
       c.append(R.addi("sc", "zero", 1, "Escribe real"))
     c.append(R.syscall())
-    registros.libera(r)
+    if self.exp.tipo == tipos.Real:
+      registrosReales.libera(r)
+    else:
+      registros.libera(r)
 
   def arbol(self):
     return '( "Escribe" "linea: %d" %s )' % (self.linea, self.exp)
@@ -199,14 +202,16 @@ class NodoAritmetica(AST):
         self.tipo= tipos.Entero
 
   def generaCodigo(self, c):
-    iz= self.izdo.generaCodigo(c)
-    if not self.izdo.tipo==self.tipo:
-      izR=registrosReales.reserva()
-      c.append(R.tofloat(izR,iz,"Cambio a real de iz"))
-    de= self.dcho.generaCodigo(c)
-    if not self.izdo.tipo==self.tipo:
-      deR=registrosReales.reserva()
-      c.append(R.tofloat(deR,de,"Cambio a real de de"))
+    if not self.izdo.tipo == self.tipo and not self.izdo.tipo == tipos.Real:
+      iz = NodoEnteroAReal(self.izdo, self.linea).generaCodigo(c)
+    else:
+      iz = self.izdo.generaCodigo(c)
+
+    if not self.dcho.tipo == self.tipo and not self.dcho.tipo == tipos.Real:
+      de = NodoEnteroAReal(self.dcho, self.linea).generaCodigo(c)
+    else:
+      de = self.dcho.generaCodigo(c)
+
     if self.tipo==tipos.Real:
       if self.op == "+":
         c.append(R.fadd(iz, iz, de))
@@ -251,6 +256,24 @@ class NodoEntero(AST):
   def arbol(self):
     return '( "Entero" "valor: %d" "tipo: %s" "linea: %d" )' % (self.valor, self.tipo, self.linea)
 
+class NodoEnteroAReal(AST):
+  def __init__(self, exp, linea):
+    self.exp= exp
+    self.linea= linea
+
+  def compsemanticas(self):
+    self.tipo= tipos.Real
+
+  def generaCodigo(self, c):
+    r= self.exp.generaCodigo(c)
+    rR=registrosReales.reserva()
+    c.append(R.tofloat(rR, r, "Cambio a real "))
+    registros.libera(r)
+    return rR
+
+  def arbol(self):
+    return '( "Entero cambiado a Real" "valor: %f" "tipo: %s" "linea: %d" )' % (self.valor, self.tipo, self.linea)
+
 class NodoReal(AST):
   def __init__(self, valor, linea):
     self.valor= valor
@@ -265,7 +288,7 @@ class NodoReal(AST):
     return r
 
   def arbol(self):
-    return '( "Real" "valor: %e" "tipo: %s" "linea: %e" )' % (self.valor, self.tipo, self.linea)
+    return '( "Real" "valor: %g" "tipo: %s" "linea: %d" )' % (self.valor, self.tipo, self.linea)
 
 class NodoCadena(AST):
   def __init__(self, cad, linea):
