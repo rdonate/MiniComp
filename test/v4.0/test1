@@ -1,0 +1,3 @@
+secuencia
+    escribe 3.1e-21 * 5.0 / 23.1e-21 * 5.0 / 2; nl;
+fin
