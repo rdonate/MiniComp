@@ -1,3 +1,7 @@
+global
+    a:real;
+fin
 secuencia
-    escribe 3.0e-21 * 5.0 / 2; nl;
+    a=3.1e-21 * 5.0 / 2;
+    escribe a; nl;
 fin
