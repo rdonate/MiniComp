@@ -105,11 +105,11 @@ class NodoEscribe(AST):
 
   def generaCodigo(self, c):
     c.append(R.Comentario("Escribe, linea %d" % self.linea))
-    r= self.exp.generaCodigo(c)
-    if self.exp.tipo==tipos.Real:
-      pass
+    r = self.exp.generaCodigo(c)
+    if not self.exp.tipo==tipos.Real:
+      c.append(R.add("a0", r, "zero"))
     else:
-      pass
+      c.append(R.fadd("fa", r, "fzero"))
     if self.exp.tipo== tipos.Entero:
       c.append(R.addi("sc", "zero", 0, "Escribe entero"))
     elif self.exp.tipo== tipos.Cadena:
