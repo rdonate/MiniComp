@@ -1,10 +1,7 @@
-global
-    a:real;
+globales
     base,altura,area:real;
 fin
 secuencia
-    a=3.1e-21 * 5.0 / 2;
-    escribe a; nl;
     base=3.3;
     altura=5;
     area=base * altura /2;

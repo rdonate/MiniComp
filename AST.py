@@ -26,7 +26,8 @@ class NodoAsignacion(AST):
     self.izda.compsemanticas()
     self.exp.compsemanticas()
     if not tipos.igualOError(self.izda.tipo, self.exp.tipo):
-      errores.semantico("Tipos incompatibles en asignacion (%s y %s)." %
+      if not self.izda.tipo==tipos.Real and self.exp.tipo==tipos.Entero:
+        errores.semantico("Tipos incompatibles en asignacion (%s y %s)." %
                         (self.izda.tipo, self.exp.tipo), self.linea)
     else:
       if not self.izda.tipo.elemental() or not self.exp.tipo.elemental():
@@ -34,11 +35,23 @@ class NodoAsignacion(AST):
 
   def generaCodigo(self, c):
     c.append(R.Comentario("Asignacion en linea %d" % self.linea))
-    rexp= self.exp.generaCodigo(c)
+    if self.exp.tipo==tipos.Entero and self.izda.tipo==tipos.Real:
+      rexp = NodoEnteroAReal(self.exp, self.linea).generaCodigo(c)
+    else:
+      rexp = self.exp.generaCodigo(c)
     rizda= self.izda.generaDir(c)
-    c.append(R.sw(rexp, 0, rizda))
-    registros.libera(rizda)
-    registros.libera(rexp)
+    if self.izda.tipo==tipos.Real:
+      # cero=registrosReales.reserva()
+      # c.append(R.tofloat(cero,0))
+      c.append(R.fsw(rexp,0,rizda))
+    else:
+      c.append(R.sw(rexp, 0, rizda))
+    if self.izda.tipo==tipos.Real:
+      registrosReales.libera(rizda)
+      registrosReales.libera(rexp)
+    else:
+      registros.libera(rizda)
+      registros.libera(rexp)
 
   def arbol(self):
     return '( "Asignacion"\n  "linea: %d" \n%s\n%s\n)' % (self.linea, self.izda, self.exp)
@@ -372,13 +385,22 @@ class NodoAccesoVariable(AST):
     self.tipo= self.var.tipo
 
   def generaCodigo(self, c):
-    r= registros.reserva()
-    c.append(R.lw(r, self.var.dir, self.var.base, "Acceso a %s" % self.var.id))
+    self.var.fijaDireccion(memoria._dirLibre)
+    if self.var.tipo==tipos.Real:
+      r = registrosReales.reserva()
+      c.append(R.flw(r, self.var.dir, self.var.base, "Acceso a %s" % self.var.id))
+    else:
+      r= registros.reserva()
+      c.append(R.lw(r, self.var.dir, self.var.base, "Acceso a %s" % self.var.id))
     return r
 
   def generaDir(self, c):
-    r= registros.reserva()
-    c.append(R.addi(r, self.var.base, self.var.dir, "Direccion de %s" % self.var.id))
+    if self.var.tipo==tipos.Real:
+      r = registrosReales.reserva()
+      c.append(R.faddi(r, self.var.base, self.var.dir, "Direccion de %s" % self.var.id))
+    else:
+      r= registros.reserva()
+      c.append(R.addi(r, self.var.base, self.var.dir, "Direccion de %s" % self.var.id))
     return r
 
   def arbol(self):

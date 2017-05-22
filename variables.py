@@ -1,10 +1,12 @@
 # -*- coding: utf-8 -*-
+import tipos
 
 class Variable:
   def __init__(self, id, tipo, local, nlinea):
     self.id= id
     self.tipo= tipo
-    self.local= local
+    self.\
+      local= local
     self.nlinea= nlinea
 
   def talla(self):
