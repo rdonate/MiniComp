@@ -385,7 +385,6 @@ class NodoAccesoVariable(AST):
     self.tipo= self.var.tipo
 
   def generaCodigo(self, c):
-    #self.var.fijaDireccion(memoria._dirLibre)
     if self.var.tipo==tipos.Real:
       r = registrosReales.reserva()
       c.append(R.flw(r, self.var.dir, self.var.base, "Acceso a %s" % self.var.id))
