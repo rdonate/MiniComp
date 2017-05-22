@@ -1003,15 +1003,25 @@ class AnalizadorSintactico:
                     Sentencia.arb= Compuesta.arb
                 elif mc_al.actual.cat == u'escribe':
                     Expresion = Expresion1 = Atributos()
+                    Expresion2 = Atributos()
+                    l= []
                     escribe = escribe1 = escribe_ = mc_al.actual
                     mc_al.avanza()
                     self.mc_analiza_Expresion(Expresion1)
                     Expresion_ = Expresion1
+                    l.append(Expresion.arb)
+                    while mc_al.actual.cat == u'!,':
+                        mc_al.avanza()
+                        self.mc_analiza_Expresion(Expresion2)
+                        Expresion_ = Expresion2
+                        l.append(Expresion2.arb)
+                    if not mc_al.actual.cat == u'!;':
+                        mc_error('<Sentencia>',[ u'!,', '!;' ])
                     if mc_al.actual.cat == u'!;':
                         mc_al.avanza()
                     else:
                         mc_error('<Sentencia>', [u'!;'])
-                    Sentencia.arb= AST.NodoEscribe(Expresion.arb, escribe.nlinea)
+                    Sentencia.arb= AST.NodoEscribe(l, escribe.nlinea)
                 elif mc_al.actual.cat == u'nl':
                     nl = nl1 = nl_ = mc_al.actual
                     mc_al.avanza()

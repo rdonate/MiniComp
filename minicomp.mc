@@ -171,8 +171,9 @@ $mc_al.sincroniza(["mc_EOF"])$
   ;
 
 <Sentencia> ->
-  escribe <Expresion> ";"
-  @Sentencia.arb= AST.NodoEscribe(Expresion.arb, escribe.nlinea)@
+  @l= []@
+  escribe <Expresion> @l.append(Expresion.arb)@ ("," <Expresion> @l.append(Expresion2.arb)@)*";"
+  @Sentencia.arb= AST.NodoEscribe(l, escribe.nlinea)@
   ;
 
 <Sentencia> ->

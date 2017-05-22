@@ -1,0 +1,10 @@
+globales
+    base,altura,area:real;
+fin
+secuencia
+    base=3.3;
+    altura=5;
+    area=base * altura /2;
+    escribe "El area es ", area ," y funciona.";
+fin
+

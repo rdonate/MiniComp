@@ -111,32 +111,38 @@ class NodoEscribe(AST):
     self.linea= linea
 
   def compsemanticas(self):
-    self.exp.compsemanticas()
-    if self.exp.tipo!= tipos.Error:
-      if self.exp.tipo!= tipos.Entero and self.exp.tipo!=tipos.Real and self.exp.tipo!= tipos.Cadena:
-        errores.semantico("Solo se escribir enteros, reales y cadenas.", self.linea)
+    for expresion in self.exp:
+      expresion.compsemanticas()
+      if expresion.tipo!= tipos.Error:
+        if expresion.tipo!= tipos.Entero and expresion.tipo!=tipos.Real and expresion.tipo!= tipos.Cadena:
+          errores.semantico("Solo se escribir enteros, reales y cadenas.", self.linea)
 
   def generaCodigo(self, c):
-    c.append(R.Comentario("Escribe, linea %d" % self.linea))
-    r = self.exp.generaCodigo(c)
-    if not self.exp.tipo==tipos.Real:
-      c.append(R.add("a0", r, "zero"))
-    else:
-      c.append(R.fadd("fa", r, "fzero"))
-    if self.exp.tipo== tipos.Entero:
-      c.append(R.addi("sc", "zero", 0, "Escribe entero"))
-    elif self.exp.tipo== tipos.Cadena:
-      c.append(R.addi("sc", "zero", 2, "Escribe cadena"))
-    elif self.exp.tipo== tipos.Real:
-      c.append(R.addi("sc", "zero", 1, "Escribe real"))
-    c.append(R.syscall())
-    if self.exp.tipo == tipos.Real:
-      registrosReales.libera(r)
-    else:
-      registros.libera(r)
+    for expresion in self.exp:
+      c.append(R.Comentario("Escribe, linea %d" % self.linea))
+      r = expresion.generaCodigo(c)
+      if not expresion.tipo==tipos.Real:
+        c.append(R.add("a0", r, "zero"))
+      else:
+        c.append(R.fadd("fa", r, "fzero"))
+      if expresion.tipo== tipos.Entero:
+        c.append(R.addi("sc", "zero", 0, "Escribe entero"))
+      elif expresion.tipo== tipos.Cadena:
+        c.append(R.addi("sc", "zero", 2, "Escribe cadena"))
+      elif expresion.tipo== tipos.Real:
+        c.append(R.addi("sc", "zero", 1, "Escribe real"))
+      c.append(R.syscall())
+      if expresion.tipo == tipos.Real:
+        registrosReales.libera(r)
+      else:
+        registros.libera(r)
 
   def arbol(self):
-    return '( "Escribe" "linea: %d" %s )' % (self.linea, self.exp)
+    r = ""
+    for expresion in self.exp:
+      r += expresion.arbol() + "\n"
+    r += "\n"
+    return '( "Escribe" "linea: %d" %s )' % (self.linea, r)
 
 class NodoCompuesta(AST):
   def __init__(self, sentencias, linea):
