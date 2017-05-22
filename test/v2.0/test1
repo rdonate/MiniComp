@@ -1,10 +1,10 @@
 globales
-    a: cadena;
-
+    base,altura,area:entero;
 fin
 secuencia
-    a="aaa";
-	ESCRIBE "aaaaa";
-	escribe "\\a\na";
-	nl;
+    base=3;
+    altura=5;
+    area=base * altura /2;
+    escribe area;
 fin
+

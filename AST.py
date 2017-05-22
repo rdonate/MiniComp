@@ -47,11 +47,11 @@ class NodoAsignacion(AST):
     else:
       c.append(R.sw(rexp, 0, rizda))
     if self.izda.tipo==tipos.Real:
-      registrosReales.libera(rizda)
+      #registrosReales.libera(rizda)
       registrosReales.libera(rexp)
     else:
-      registros.libera(rizda)
       registros.libera(rexp)
+    registros.libera(rizda)
 
   def arbol(self):
     return '( "Asignacion"\n  "linea: %d" \n%s\n%s\n)' % (self.linea, self.izda, self.exp)
@@ -385,7 +385,7 @@ class NodoAccesoVariable(AST):
     self.tipo= self.var.tipo
 
   def generaCodigo(self, c):
-    self.var.fijaDireccion(memoria._dirLibre)
+    #self.var.fijaDireccion(memoria._dirLibre)
     if self.var.tipo==tipos.Real:
       r = registrosReales.reserva()
       c.append(R.flw(r, self.var.dir, self.var.base, "Acceso a %s" % self.var.id))
@@ -395,12 +395,8 @@ class NodoAccesoVariable(AST):
     return r
 
   def generaDir(self, c):
-    if self.var.tipo==tipos.Real:
-      r = registrosReales.reserva()
-      c.append(R.faddi(r, self.var.base, self.var.dir, "Direccion de %s" % self.var.id))
-    else:
-      r= registros.reserva()
-      c.append(R.addi(r, self.var.base, self.var.dir, "Direccion de %s" % self.var.id))
+    r= registros.reserva()
+    c.append(R.addi(r, self.var.base, self.var.dir, "Direccion de %s" % self.var.id))
     return r
 
   def arbol(self):
