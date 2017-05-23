@@ -144,6 +144,43 @@ class NodoEscribe(AST):
     r += "\n"
     return '( "Escribe" "linea: %d" %s )' % (self.linea, r)
 
+class NodoLee(AST):
+  def __init__(self, exp, linea):
+    self.exp= exp
+    self.linea= linea
+
+  def compsemanticas(self):
+    self.exp.compsemanticas()
+    if self.exp.tipo!= tipos.Error:
+      if self.exp.tipo!= tipos.Entero and self.exp.tipo!= tipos.Real:
+        errores.semantico("Solo se lee enteros y reales.", self.linea)
+
+  def generaCodigo(self, c):
+    c.append(R.Comentario("Lee, linea %d" % self.linea))
+    dir = self.exp.generaDir(c)
+    if self.exp.tipo == tipos.Real:
+      r = registrosReales.reserva()
+      aux = self.exp
+      while not str(aux.__class__) != 'AST.NodoAccesoVector':
+        if aux.izda != None:
+          aux = aux.izda
+      c.append(R.flw(r, 0, dir, "Lee a %s "%aux.var.id ))
+    elif self.exp.tipo== tipos.Entero:
+      r=registros.reserva()
+      aux = self.exp
+      while not str(aux.__class__) != 'AST.NodoAccesoVector':
+        if aux.izda != None:
+          aux = aux.izda
+      c.append(R.lw(r, 0, dir, "Lee a %s "%aux.var.id ))
+    return r
+
+  def arbol(self):
+    aux = self.exp
+    while not str(aux.__class__) != 'AST.NodoAccesoVector':
+      if aux.izda != None:
+        aux = aux.izda
+    return '( "Lee" "linea: %d" %s )' % (self.linea, aux.var.id)
+
 class NodoCompuesta(AST):
   def __init__(self, sentencias, linea):
     self.sentencias= sentencias

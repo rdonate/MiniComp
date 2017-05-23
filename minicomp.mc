@@ -30,7 +30,7 @@ def trataCad(c):
   c.valor=c.valor.replace('\t','\t')
 
 _reservadas=ImmutableSet(["cadena", "de", "devuelve",
-        "entero","real", "entonces", "es", "escribe", "fin",
+        "entero","real", "entonces", "es", "escribe", "lee", "fin",
         "funcion", "globales", "llama",  "locales",
         "nl", "secuencia", "si", "si_no", "vector"])
 
@@ -174,6 +174,11 @@ $mc_al.sincroniza(["mc_EOF"])$
   @l= []@
   escribe <Expresion> @l.append(Expresion.arb)@ ("," <Expresion> @l.append(Expresion2.arb)@)*";"
   @Sentencia.arb= AST.NodoEscribe(l, escribe.nlinea)@
+  ;
+
+<Sentencia> ->
+  lee <AccesoVariable> ";"
+  @Sentencia.arb= AST.NodoLee(AccesoVariable.arb, lee.nlinea)@
   ;
 
 <Sentencia> ->
