@@ -252,6 +252,7 @@ $mc_al.sincroniza(["mc_EOF"])$
   | num @Termino.arb= AST.NodoEntero(num.valor, num.nlinea)@
   | "(" <Expresion> ")" @Termino.arb= Expresion.arb@
   | numreal @Termino.arb= AST.NodoReal(numreal.valor, numreal.nlinea)@
+  | opad <Termino> @Termino.arb= AST.NodoCambioSigno(opad.lexema, Termino_.arb, opad.nlinea)@
   | cad
     @c= cadenas.Cadena(cad.valor)@
     @Termino.arb= AST.NodoCadena(c, cad.nlinea)@

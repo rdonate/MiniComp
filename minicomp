@@ -550,18 +550,18 @@ def main():
         gencodigo.gencodigo(principal, Funciones, Cadenas, VariablesGlobales)
 mc_primeros = {
     '<AccesoVariable>' : [u'id'],
-    '<Comparado>' : [u'numreal', u'!(', u'num', u'llama', u'id', u'cad'],
+    '<Comparado>' : [u'opad', u'numreal', u'!(', u'num', u'llama', u'id', u'cad'],
     '<Compuesta>' : [u'secuencia'],
     '<Definicion>' : [u'id'],
-    '<Expresion>' : [u'numreal', u'!(', u'num', u'llama', u'id', u'cad'],
+    '<Expresion>' : [u'opad', u'numreal', u'!(', u'num', u'llama', u'id', u'cad'],
     '<Funcion>' : [u'funcion'],
     '<Globales>' : [u'globales'],
     '<Llamada>' : [u'llama'],
     '<Perfil>' : [u'!('],
-    '<Producto>' : [u'numreal', u'!(', u'num', u'llama', u'id', u'cad'],
+    '<Producto>' : [u'opad', u'numreal', u'!(', u'num', u'llama', u'id', u'cad'],
     '<Programa>' : [u'secuencia', u'globales', u'funcion'],
     '<Sentencia>' : [u'escribe', u'si', u'secuencia', u'nl', u'lee', u'devuelve', u'id'],
-    '<Termino>' : [u'numreal', u'!(', u'num', u'llama', u'id', u'cad'],
+    '<Termino>' : [u'opad', u'numreal', u'!(', u'num', u'llama', u'id', u'cad'],
     '<Tipo>' : [u'cadena', u'real', u'vector', u'entero'],
 }
 mc_siguientes = {
@@ -582,18 +582,18 @@ mc_siguientes = {
 }
 mc_aceptables = {
     '<AccesoVariable>' : [u'id'],
-    '<Comparado>' : [u'numreal', u'num', u'llama', u'!(', u'id', u'cad'],
+    '<Comparado>' : [u'opad', u'numreal', u'num', u'llama', u'!(', u'id', u'cad'],
     '<Compuesta>' : [u'secuencia'],
     '<Definicion>' : [u'id'],
-    '<Expresion>' : [u'numreal', u'num', u'llama', u'!(', u'id', u'cad'],
+    '<Expresion>' : [u'opad', u'numreal', u'num', u'llama', u'!(', u'id', u'cad'],
     '<Funcion>' : [u'funcion'],
     '<Globales>' : [u'globales'],
     '<Llamada>' : [u'llama'],
     '<Perfil>' : [u'!('],
-    '<Producto>' : [u'numreal', u'num', u'llama', u'!(', u'id', u'cad'],
+    '<Producto>' : [u'opad', u'numreal', u'num', u'llama', u'!(', u'id', u'cad'],
     '<Programa>' : [u'secuencia', u'globales', u'funcion'],
     '<Sentencia>' : [u'escribe', u'si', u'secuencia', u'nl', u'lee', u'devuelve', u'id'],
-    '<Termino>' : [u'numreal', u'num', u'llama', u'!(', u'id', u'cad'],
+    '<Termino>' : [u'opad', u'numreal', u'num', u'llama', u'!(', u'id', u'cad'],
     '<Tipo>' : [u'cadena', u'real', u'vector', u'entero'],
 }
 mc_anulables = {
@@ -670,8 +670,8 @@ class AnalizadorSintactico:
         AccesoVariable.arb= arb
     def mc_analiza_Comparado(self, Comparado):
         mc_al = self.mc_al
-        if not mc_al.actual.cat in [ u'!(', 'cad', 'id', 'llama', 'num', 'numreal' ]:
-            mc_error('<Comparado>', [ u'!(', 'cad', 'id', 'llama', 'num', 'numreal' ])
+        if not mc_al.actual.cat in [ u'!(', 'cad', 'id', 'llama', 'num', 'numreal', 'opad' ]:
+            mc_error('<Comparado>', [ u'!(', 'cad', 'id', 'llama', 'num', 'numreal', 'opad' ])
         Producto = Producto1 = Atributos()
         Producto2 = Atributos()
         self.mc_analiza_Producto(Producto1)
@@ -750,8 +750,8 @@ class AnalizadorSintactico:
         while self.mc_reintento[-1]:
             self.mc_reintento[-1]= False
             try:
-                if not mc_al.actual.cat in [ u'!(', 'cad', 'id', 'llama', 'num', 'numreal' ]:
-                    mc_error('<Expresion>', [ u'!(', 'cad', 'id', 'llama', 'num', 'numreal' ])
+                if not mc_al.actual.cat in [ u'!(', 'cad', 'id', 'llama', 'num', 'numreal', 'opad' ]:
+                    mc_error('<Expresion>', [ u'!(', 'cad', 'id', 'llama', 'num', 'numreal', 'opad' ])
                 Comparado = Comparado1 = Atributos()
                 Comparado2 = Atributos()
                 self.mc_analiza_Comparado(Comparado1)
@@ -888,7 +888,7 @@ class AnalizadorSintactico:
         else:
             mc_error('<Llamada>', [u'!('])
         l=[]
-        if mc_al.actual.cat in [ u'!(', 'cad', 'id', 'llama', 'num', 'numreal' ]:
+        if mc_al.actual.cat in [ u'!(', 'cad', 'id', 'llama', 'num', 'numreal', 'opad' ]:
             self.mc_analiza_Expresion(Expresion1)
             Expresion_ = Expresion1
             l.append(Expresion_.arb)
@@ -942,8 +942,8 @@ class AnalizadorSintactico:
         Perfil.tipo= Tipo.tipo
     def mc_analiza_Producto(self, Producto):
         mc_al = self.mc_al
-        if not mc_al.actual.cat in [ u'!(', 'cad', 'id', 'llama', 'num', 'numreal' ]:
-            mc_error('<Producto>', [ u'!(', 'cad', 'id', 'llama', 'num', 'numreal' ])
+        if not mc_al.actual.cat in [ u'!(', 'cad', 'id', 'llama', 'num', 'numreal', 'opad' ]:
+            mc_error('<Producto>', [ u'!(', 'cad', 'id', 'llama', 'num', 'numreal', 'opad' ])
         Termino = Termino1 = Atributos()
         Termino2 = Atributos()
         self.mc_analiza_Termino(Termino1)
@@ -1110,11 +1110,12 @@ class AnalizadorSintactico:
         self.mc_reintento.pop()
     def mc_analiza_Termino(self, Termino):
         mc_al = self.mc_al
-        if not mc_al.actual.cat in [ u'!(', 'cad', 'id', 'llama', 'num', 'numreal' ]:
-            mc_error('<Termino>', [ u'!(', 'cad', 'id', 'llama', 'num', 'numreal' ])
+        if not mc_al.actual.cat in [ u'!(', 'cad', 'id', 'llama', 'num', 'numreal', 'opad' ]:
+            mc_error('<Termino>', [ u'!(', 'cad', 'id', 'llama', 'num', 'numreal', 'opad' ])
         AccesoVariable = AccesoVariable1 = Atributos()
         Llamada = Llamada1 = Atributos()
         Expresion = Expresion1 = Atributos()
+        Termino1 = Atributos()
         if mc_al.actual.cat == u'id':
             self.mc_analiza_AccesoVariable(AccesoVariable1)
             AccesoVariable_ = AccesoVariable1
@@ -1140,6 +1141,12 @@ class AnalizadorSintactico:
             numreal = numreal1 = numreal_ = mc_al.actual
             mc_al.avanza()
             Termino.arb= AST.NodoReal(numreal.valor, numreal.nlinea)
+        elif mc_al.actual.cat == u'opad':
+            opad = opad1 = opad_ = mc_al.actual
+            mc_al.avanza()
+            self.mc_analiza_Termino(Termino1)
+            Termino_ = Termino1
+            Termino.arb= AST.NodoCambioSigno(opad.lexema, Termino_.arb, opad.nlinea)
         else:
             cad = cad1 = cad_ = mc_al.actual
             mc_al.avanza()

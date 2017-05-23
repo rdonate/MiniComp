@@ -1,0 +1,12 @@
+globales
+    num:real;
+    matriz: vector[10] de vector[20] de vector[30] de entero;
+fin
+secuencia
+    num=-35.1;
+    escribe  num;
+    lee num;
+    matriz[3*2][4-1][5+2]=22;
+    lee matriz[3*2][4-1][5+2];
+fin
+

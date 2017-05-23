@@ -296,6 +296,37 @@ class NodoAritmetica(AST):
     return '( "Aritmetica" "op: %s" "tipo: %s" "linea: %d" \n %s\n %s\n)' % \
            (self.op, self.tipo, self.linea, self.izdo, self.dcho)
 
+class NodoCambioSigno(AST):
+  def __init__(self,operacion,izda,linea):
+    self.op=operacion
+    self.izdo=izda
+    self.linea=linea
+
+  def compsemanticas(self):
+    self.izdo.compsemanticas()
+    if self.izdo.tipo!=tipos.Cadena:
+      self.tipo=self.izdo.tipo
+    else:
+      errores.semantico("No se puede cambiar el signo de una cadena.", self.linea)
+
+  def generaCodigo(self, c):
+    iz = self.izdo.generaCodigo(c)
+    if self.tipo==tipos.Real:
+      if self.op == "+":
+        c.append(R.fadd(iz, "fzero", iz))
+      elif self.op == "-":
+        c.append(R.fsub(iz, "fzero", iz))
+    else:
+      if self.op== "+":
+        c.append(R.add(iz, "zero", iz))
+      elif self.op== "-":
+        c.append(R.sub(iz, "zero", iz))
+    return iz
+
+  def arbol(self):
+    return '( "Cambio de signo" "op: %s" "tipo: %s" "linea: %d" \n %s\n)' % \
+           (self.op, self.tipo, self.linea, self.izdo)
+
 class NodoEntero(AST):
   def __init__(self, valor, linea):
     self.valor= valor
