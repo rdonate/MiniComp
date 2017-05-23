@@ -1,0 +1,13 @@
+globales
+    a,b,c: reales;
+fin
+secuencia
+    a=5.2;
+    b=7.4;
+    si a==b entonces
+        c=a+b;
+    si_no
+        c=b-a;
+    fin
+    escribe c;
+fin

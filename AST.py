@@ -210,26 +210,44 @@ class NodoComparacion(AST):
   def compsemanticas(self):
     self.izdo.compsemanticas()
     self.dcho.compsemanticas()
-    if not tipos.igualOError(self.izdo.tipo, tipos.Entero) or \
-       not tipos.igualOError(self.dcho.tipo, tipos.Entero):
-      errores.semantico("Las operaciones de comparacion solo pueden operar con enteros.", self.linea)
+    if tipos.igualOError(self.izdo.tipo, tipos.Cadena) or \
+       tipos.igualOError(self.dcho.tipo, tipos.Cadena):
+      errores.semantico("Las operaciones de comparacion solo pueden operar con enteros y reales.", self.linea)
       self.tipo= tipos.Error
     else:
       self.tipo= tipos.Logico
 
   def codigoControl(self, c, cierto, falso):
-    iz= self.izdo.generaCodigo(c)
-    de= self.dcho.generaCodigo(c)
-    if cierto!= None:
-      op= {"=": R.beq, "!=": R.bne, "<": R.blt, "<=": R.ble, ">": R.bgt, ">=": R.bge}[self.op]
-      c.append(op(iz, de, cierto))
+    if self.izdo.tipo!=self.tipo and not self.izdo.tipo!=tipos.Real:
+      iz=NodoEnteroAReal(self.izdo,self.linea).generaCodigo(c)
     else:
-      op= {"=": R.bne, "!=": R.beq, "<": R.bge, "<=": R.bgt, ">": R.ble, ">=": R.blt}[self.op]
-      c.append(op(iz, de, falso))
+      iz= self.izdo.generaCodigo(c)
+    if self.dcho.tipo!=self.tipo and not self.dcho.tipo!=tipos.Real:
+      de=NodoEnteroAReal(self.dcho,self.linea).generaCodigo(c)
+    else:
+      de= self.dcho.generaCodigo(c)
+    if self.tipo==tipos.Real:
+      if cierto != None:
+        op = {"==": R.fbeq, "!=": R.fbne, "<": R.fblt, "<=": R.fble, ">": R.fbgt, ">=": R.fbge}[self.op]
+        c.append(op(iz, de, cierto))
+      else:
+        op = {"==": R.fbne, "!=": R.fbeq, "<": R.fbge, "<=": R.fbgt, ">": R.fble, ">=": R.fblt}[self.op]
+        c.append(op(iz, de, falso))
+    elif self.tipo==tipos.Entero:
+      if cierto!= None:
+        op= {"==": R.beq, "!=": R.bne, "<": R.blt, "<=": R.ble, ">": R.bgt, ">=": R.bge}[self.op]
+        c.append(op(iz, de, cierto))
+      else:
+        op= {"==": R.bne, "!=": R.beq, "<": R.bge, "<=": R.bgt, ">": R.ble, ">=": R.blt}[self.op]
+        c.append(op(iz, de, falso))
     if cierto!= None and falso!= None:
       c.append(R.j(falso))
-    registros.libera(de)
-    registros.libera(iz)
+    if self.tipo==tipos.Real:
+      registrosReales.libera(de)
+      registrosReales.libera(iz)
+    elif self.tipo==tipos.Entero:
+      registros.libera(de)
+      registros.libera(iz)
 
   def arbol(self):
     return '( "Comparacion" "op: %s" "tipo: %s" "linea: %d" \n %s\n %s\n)' % \
@@ -295,6 +313,61 @@ class NodoAritmetica(AST):
   def arbol(self):
     return '( "Aritmetica" "op: %s" "tipo: %s" "linea: %d" \n %s\n %s\n)' % \
            (self.op, self.tipo, self.linea, self.izdo, self.dcho)
+
+class NodoOperacionLogica(AST):
+  def __init__(self, op, izdo, dcho, linea):
+    self.op= op
+    self.izdo= izdo
+    self.dcho= dcho
+    self.linea= linea
+
+  def compsemanticas(self):
+    self.izdo.compsemanticas()
+    self.dcho.compsemanticas()
+    if not self.izdo.tipo==tipos.Logico or \
+       not self.dcho.tipo==tipos.Logico:
+      errores.semantico("Las operaciones lógicas solo pueden operar con enteros y reales.", self.linea)
+      self.tipo= tipos.Error
+    else:
+        self.tipo= tipos.Logico
+
+  def generaCodigo(self, c):
+    iz = self.izdo.generaCodigo(c)
+    de = self.dcho.generaCodigo(c)
+    if self.op == "/\\":
+      c.append(R.fadd(iz, iz, de))
+    elif self.op == "\\/":
+      c.append(R.fsub(iz, iz, de))
+    registrosReales.libera(de)
+    return iz
+
+  def arbol(self):
+    return '( "Operación Logica" "op: %s" "tipo: %s" "linea: %d" \n %s\n %s\n)' % \
+           (self.op, self.tipo, self.linea, self.izdo, self.dcho)
+
+class NodoOperacionNotLogica(AST):
+  def __init__(self, op, izdo, dcho, linea):
+    self.op= op
+    self.izdo= izdo
+    self.linea= linea
+
+  def compsemanticas(self):
+    self.izdo.compsemanticas()
+    if not self.izdo.tipo==tipos.Logico:
+      errores.semantico("Las operaciones lógicas solo pueden operar con enteros y reales.", self.linea)
+      self.tipo= tipos.Error
+    else:
+        self.tipo= tipos.Logico
+
+  def generaCodigo(self, c):
+    iz = self.izdo.generaCodigo(c)
+    if self.op == "/\\":
+      c.append(R.fadd(iz, iz, "zero"))
+    return iz
+
+  def arbol(self):
+    return '( "Operación Logica" "op: %s" "tipo: %s" "linea: %d" \n %s\n)' % \
+           (self.op, self.tipo, self.linea, self.izdo)
 
 class NodoCambioSigno(AST):
   def __init__(self,operacion,izda,linea):
