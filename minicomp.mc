@@ -188,7 +188,9 @@ $mc_al.sincroniza(["mc_EOF"])$
 
 <Sentencia> ->
   @l=[]@
-  si <Expresion> entonces <Sentencia> @l.append(Sentencia.arb)@ (si_no <Sentencia> @l.append(Sentencia.arb)@)? fin
+  @s=[]@
+  @n=[]@
+  si <Expresion> entonces (<Sentencia> @s.append(Sentencia1.arb)@)* @l.append(s)@ (si_no (<Sentencia> @n.append(Sentencia2.arb)@)* @l.append(n)@)? fin
   @Sentencia.arb= AST.NodoSi(Expresion.arb, l, si.nlinea)@
   ;
 

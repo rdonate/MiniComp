@@ -78,32 +78,50 @@ class NodoDevuelve(AST):
     return '( "Devuelve" "linea: %d" %s)' % (self.linea, self.exp)
 
 class NodoSi(AST):
-  def __init__(self, cond, si, sino, linea):
+  def __init__(self, cond, siysino, linea):
     self.cond= cond
-    self.si= si
-    self.sino= sino
+    if len(siysino)==2:
+      self.si= siysino[0]
+      self.sino= siysino[1]
+    elif len(siysino)==1:
+      self.si = siysino[0]
+      self.sino = None
+    else:
+      errores.semantico("El nodo si esta mal formado.", self.linea)
     self.linea= linea
 
   def compsemanticas(self):
     self.cond.compsemanticas()
-    self.si.compsemanticas()
-    self.sino.compsemanticas()
+    for sent in self.si:
+      sent.compsemanticas()
+    if self.sino!=None:
+      for sent in self.sino:
+        sent.compsemanticas()
     if not tipos.igualOError(self.cond.tipo, tipos.Logico):
       errores.semantico("La condicion del si debe ser de tipo logico.", self.linea)
 
   def generaCodigo(self, c):
     c.append(R.Comentario("Condicional en linea: %d" % self.linea))
     siguiente= etiquetas.nueva()
-    falso= etiquetas.nueva()
+    if self.sino!=None:
+      falso= etiquetas.nueva()
+    else:
+      falso=siguiente
     self.cond.codigoControl(c,None,falso)
-    self.si.generaCodigo(c)
+    for sent in self.si:
+      sent.generaCodigo(c)
     c.append(R.j(siguiente))
-    c.append(R.Etiqueta(falso))
-    self.sino.generaCodigo(c)
+    if self.sino!=None:
+      c.append(R.Etiqueta(falso))
+      for sent in self.sino:
+        sent.generaCodigo(c)
     c.append(R.Etiqueta(siguiente))
 
   def arbol(self):
-    return '( "Si" "linea: %d" %s\n %s\n %s\n )' % (self.linea, self.cond, self.si, self.sino)
+    if self.sino!=None:
+      return '( "Si" "linea: %d" %s\n %s\n %s\n )' % (self.linea, self.cond, self.si, self.sino)
+    else:
+      return '( "Si" "linea: %d" %s\n %s\n )' % (self.linea, self.cond, self.si)
 
 class NodoEscribe(AST):
   def __init__(self, exp, linea):
@@ -221,10 +239,10 @@ class NodoComparacion(AST):
     iz= self.izdo.generaCodigo(c)
     de= self.dcho.generaCodigo(c)
     if cierto!= None:
-      op= {"=": R.beq, "!=": R.bne, "<": R.blt, "<=": R.ble, ">": R.bgt, ">=": R.bge}[self.op]
+      op= {"==": R.beq, "!=": R.bne, "<": R.blt, "<=": R.ble, ">": R.bgt, ">=": R.bge}[self.op]
       c.append(op(iz, de, cierto))
     else:
-      op= {"=": R.bne, "!=": R.beq, "<": R.bge, "<=": R.bgt, ">": R.ble, ">=": R.blt}[self.op]
+      op= {"==": R.bne, "!=": R.beq, "<": R.bge, "<=": R.bgt, ">": R.ble, ">=": R.blt}[self.op]
       c.append(op(iz, de, falso))
     if cierto!= None and falso!= None:
       c.append(R.j(falso))

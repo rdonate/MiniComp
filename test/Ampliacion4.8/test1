@@ -1,0 +1,20 @@
+globales
+    a,b,aux:entero;
+fin
+secuencia
+    a=3;
+    b=5;
+    escribe "El valor de a es ", a," y el valor de b es ",b," antes de los si.\n";
+    si b>a entonces
+        aux=a;
+        a=b;
+        b=aux;
+    fin
+    escribe "El valor de a es ", a," y el valor de b es ",b," despues del primer si.\n";
+    si b>a entonces
+        b=b+1;
+    si_no
+        a=a-1;
+    fin
+    escribe "El valor de a es ", a," y el valor de b es ",b,".\n";
+fin

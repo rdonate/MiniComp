@@ -576,7 +576,7 @@ mc_siguientes = {
     '<Perfil>' : [u'es'],
     '<Producto>' : [u'opad', u'!)', u'!,', u'entonces', u'opcom', u'!;', u'!]'],
     '<Programa>' : ['mc_EOF'],
-    '<Sentencia>' : [u'si_no', u'nl', u'lee', u'escribe', u'si', u'secuencia', u'devuelve', u'fin', u'id'],
+    '<Sentencia>' : [u'secuencia', u'nl', u'lee', u'escribe', u'si', u'si_no', u'devuelve', u'fin', u'id'],
     '<Termino>' : [u'opad', u'!)', u'!,', u'entonces', u'opcom', u'opmul', u'!;', u'!]'],
     '<Tipo>' : [u'!)', u'!;', u'es'],
 }
@@ -1045,6 +1045,9 @@ class AnalizadorSintactico:
                     Expresion = Expresion1 = Atributos()
                     Sentencia1 = Atributos()
                     Sentencia2 = Atributos()
+                    l=[]
+                    s=[]
+                    n=[]
                     si = si1 = si_ = mc_al.actual
                     mc_al.avanza()
                     self.mc_analiza_Expresion(Expresion1)
@@ -1054,21 +1057,29 @@ class AnalizadorSintactico:
                         mc_al.avanza()
                     else:
                         mc_error('<Sentencia>', [u'entonces'])
-                    self.mc_analiza_Sentencia(Sentencia1)
-                    Sentencia_ = Sentencia1
+                    while mc_al.actual.cat in [ u'devuelve', 'escribe', 'id', 'lee', 'nl', 'secuencia', 'si' ]:
+                        self.mc_analiza_Sentencia(Sentencia1)
+                        Sentencia_ = Sentencia1
+                        s.append(Sentencia1.arb)
+                    if not mc_al.actual.cat in [ u'fin', 'si_no' ]:
+                        mc_error('<Sentencia>',[ u'devuelve', 'escribe', 'fin', 'id', 'lee', 'nl', 'secuencia', 'si', 'si_no' ])
+                    l.append(s)
                     if mc_al.actual.cat == u'si_no':
                         si_no = si_no1 = si_no_ = mc_al.actual
                         mc_al.avanza()
-                    else:
-                        mc_error('<Sentencia>', [u'si_no'])
-                    self.mc_analiza_Sentencia(Sentencia2)
-                    Sentencia_ = Sentencia2
+                        while mc_al.actual.cat in [ u'devuelve', 'escribe', 'id', 'lee', 'nl', 'secuencia', 'si' ]:
+                            self.mc_analiza_Sentencia(Sentencia2)
+                            Sentencia_ = Sentencia2
+                            n.append(Sentencia2.arb)
+                        if not mc_al.actual.cat == u'fin':
+                            mc_error('<Sentencia>',[ u'devuelve', 'escribe', 'fin', 'id', 'lee', 'nl', 'secuencia', 'si' ])
+                        l.append(n)
                     if mc_al.actual.cat == u'fin':
                         fin = fin1 = fin_ = mc_al.actual
                         mc_al.avanza()
                     else:
                         mc_error('<Sentencia>', [u'fin'])
-                    Sentencia.arb= AST.NodoSi(Expresion.arb, Sentencia1.arb, Sentencia2.arb, si.nlinea)
+                    Sentencia.arb= AST.NodoSi(Expresion.arb, l, si.nlinea)
                 elif mc_al.actual.cat == u'id':
                     AccesoVariable = AccesoVariable1 = Atributos()
                     Expresion = Expresion1 = Atributos()
