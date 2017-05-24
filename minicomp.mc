@@ -32,7 +32,7 @@ def trataCad(c):
 _reservadas=ImmutableSet(["cadena", "de", "devuelve",
         "entero","real", "entonces", "es", "escribe", "lee", "fin",
         "funcion", "globales", "llama",  "locales",
-        "nl", "secuencia", "si", "si_no", "vector", "mientras", "hacer"])
+        "nl", "secuencia", "si", "si_no", "vector", "mientras", "hacer","pr"])
 
 def trataId(c):
   try:

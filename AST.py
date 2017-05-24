@@ -69,9 +69,13 @@ class NodoDevuelve(AST):
 
   def generaCodigo(self, c):
     c.append(R.Comentario("Devuelve en linea %d" % self.linea))
-    r= self.exp.generaCodigo(c)
-    c.append(R.add("a0", r, "zero"))
-    registros.libera(r)
+    r = self.exp.generaCodigo(c)
+    if self.exp.tipo==tipos.Real:
+      c.append(R.fadd("fa", r, "fzero"))
+      registrosReales.libera(r)
+    else:
+      c.append(R.add("a0", r, "zero"))
+      registros.libera(r)
     c.append(R.j(self.f.salida))
 
   def arbol(self):
@@ -463,30 +467,51 @@ class NodoLlamada(AST):
         arg= self.args[i]
         pf= self.f.parametros[i]
         if not tipos.igualOError(arg.tipo, pf.tipo):
-          errores.semantico("No coincide el tipo del parametro %d (deberia ser %s)." %
-                            (i+1, pf.tipo), self.linea)
+          if not tipos.igualOError(arg.tipo,tipos.Real) and tipos.igualOError(pf.tipo, tipos.Real):
+            arg=NodoEnteroAReal(arg,self.linea)
+            self.args[i]=arg
+          else:
+            errores.semantico("No coincide el tipo del parametro %d (deberia ser %s)." %
+                              (i+1, pf.tipo), self.linea)
 
   def generaCodigo(self,c):
     c.append(R.Comentario("Llamada a %s en linea %d" % (self.f.id, self.linea)))
     act= registros.activos()
+    actReales = registrosReales.activos()
     if act:
       c.append(R.Comentario("Guardamos los registros activos:"))
       for i,ra in enumerate(act):
         c.append(R.save(ra, i, "sp"))
       c.append(R.addi("sp", "sp", len(act)))
     for i in range(len(self.args)):
-      r= self.args[i].generaCodigo(c)
-      c.append(R.sw(r, 0, "sp","Parametro %s" % self.f.parametros[i].id))
-      c.append(R.addi("sp", "sp", 1))
-      registros.libera(r)
+      self.args[i].compsemanticas()
+      if self.tipo==tipos.Real and self.args[i].tipo==tipos.Entero:
+        r = NodoEnteroAReal(self.args[i]).generaCodigo(c)
+      else:
+        r= self.args[i].generaCodigo(c)
+      if self.args[i].tipo==tipos.Real:
+        c.append(R.fsw(r, 0, "sp", "Parametro %s" % self.f.parametros[i].id))
+        c.append(R.addi("sp", "sp", 1))
+        registrosReales.libera(r)
+      else:
+        c.append(R.sw(r, 0, "sp","Parametro %s" % self.f.parametros[i].id))
+        c.append(R.addi("sp", "sp", 1))
+        registros.libera(r)
     c.append(R.jal(self.f.etiqueta, "Salto a la funcion"))
-    r= registros.reserva()
-    c.append(R.add(r, "a0", "zero"))
+    if self.tipo==tipos.Real:
+      r=registrosReales.reserva()
+      c.append(R.fadd(r,"fa","fzero"))
+    else:
+      r= registros.reserva()
+      c.append(R.add(r, "a0", "zero"))
     if act:
       c.append(R.Comentario("Recuperamos los registros activos:"))
       c.append(R.subi("sp", "sp", len(act)))
+      c.append(R.subi("sp","sp",len(actReales)))
       for i,ra in enumerate(act):
         c.append(R.rest(ra, i, "sp"))
+      for i,ra in enumerate(actReales):
+        c.append(R.frest(ra, i, "sp"))
     return r
 
   def arbol(self):

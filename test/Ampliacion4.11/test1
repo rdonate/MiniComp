@@ -1,0 +1,10 @@
+funcion area_triangulo(base,altura: real): real
+es
+secuencia
+    devuelve base*altura/2;
+fin
+
+secuencia
+    escribe "El area del triangulo es ",llama area_triangulo(3.1,5.1),".\n";
+    escribe "El area del triangulo es ",llama area_triangulo(2,10),".\n";
+fin
