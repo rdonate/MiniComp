@@ -542,13 +542,18 @@ class NodoAccesoVector(AST):
         self.tipo= self.izda.tipo.base
     else:
       self.tipo= tipos.Error
-    if not tipos.igualOError(self.exp.tipo, tipos.Entero):
+    if not (tipos.igualOError(self.exp.tipo, tipos.Entero) and \
+       not tipos.igualOError(self.exp.tipo, tipos.Real)):
       errores.semantico("El tipo de la expresion de acceso al vector debe ser entero.",
                         self.linea)
 
   def generaCodigo(self, c):
     r= self.generaDir(c)
-    c.append(R.lw(r, 0, r))
+    if self.tipo==tipos.Real:
+      rR=registrosReales.reserva()
+      c.append(R.flw(rR, 0, r))
+    else:
+      c.append(R.lw(r, 0, r))
     return r
 
   def generaDir(self, c):

@@ -1,0 +1,18 @@
+globales
+    m: vector[3] de vector[4] de real;
+    valor: real;
+    i,j:entero;
+fin
+secuencia
+    i=0;
+    mientras i<3 hacer
+        j=0;
+        mientras j<4 hacer
+            m[i][j]=i+j;
+            valor = m[i][j];
+            escribe "El valor del vector m en la posicion i=",i," y j=",j," es ", valor ,".\n";
+            j=j+1;
+        fin
+        i=i+1;
+    fin
+fin
