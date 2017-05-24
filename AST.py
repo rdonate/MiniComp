@@ -77,9 +77,37 @@ class NodoDevuelve(AST):
   def arbol(self):
     return '( "Devuelve" "linea: %d" %s)' % (self.linea, self.exp)
 
+class NodoMientras(AST):
+  def __init__(self, cond, sentencias, linea):
+    self.cond = cond
+    self.sentencias=sentencias
+    self.linea=linea
+
+  def compsemanticas(self):
+    self.cond.compsemanticas()
+    for sent in self.sentencias:
+      sent.compsemanticas()
+    if not tipos.igualOError(self.cond.tipo, tipos.Logico):
+      errores.semantico("La condicion del si debe ser de tipo logico.", self.linea)
+
+  def generaCodigo(self, c):
+    c.append(R.Comentario("Mientras en linea: %d" % self.linea))
+    comienzo = etiquetas.nueva()
+    siguiente = etiquetas.nueva()
+    c.append(R.Etiqueta(comienzo))
+    self.cond.codigoControl(c, None, siguiente)
+    for sent in self.sentencias:
+      sent.generaCodigo(c)
+    c.append(R.j(comienzo))
+    c.append(R.Etiqueta(siguiente))
+
+  def arbol(self):
+    return '( "Mientras" "linea: %d" %s\n %s\n )' % (self.linea, self.cond, self.sentencias)
+
 class NodoSi(AST):
   def __init__(self, cond, siysino, linea):
     self.cond= cond
+    self.linea = linea
     if len(siysino)==2:
       self.si= siysino[0]
       self.sino= siysino[1]
@@ -88,7 +116,6 @@ class NodoSi(AST):
       self.sino = None
     else:
       errores.semantico("El nodo si esta mal formado.", self.linea)
-    self.linea= linea
 
   def compsemanticas(self):
     self.cond.compsemanticas()

@@ -32,7 +32,7 @@ def trataCad(c):
 _reservadas=ImmutableSet(["cadena", "de", "devuelve",
         "entero","real", "entonces", "es", "escribe", "lee", "fin",
         "funcion", "globales", "llama",  "locales",
-        "nl", "secuencia", "si", "si_no", "vector"])
+        "nl", "secuencia", "si", "si_no", "vector", "mientras", "hacer"])
 
 def trataId(c):
   try:
@@ -192,6 +192,12 @@ $mc_al.sincroniza(["mc_EOF"])$
   @n=[]@
   si <Expresion> entonces (<Sentencia> @s.append(Sentencia1.arb)@)* @l.append(s)@ (si_no (<Sentencia> @n.append(Sentencia2.arb)@)* @l.append(n)@)? fin
   @Sentencia.arb= AST.NodoSi(Expresion.arb, l, si.nlinea)@
+  ;
+
+<Sentencia> ->
+  @l=[]@
+  mientras <Expresion> hacer (<Sentencia> @l.append(Sentencia1.arb)@)* fin
+  @Sentencia.arb= AST.NodoMientras(Expresion.arb, l, mientras.nlinea)@
   ;
 
 <Sentencia> ->

@@ -469,7 +469,7 @@ def trataCad(c):
 _reservadas=ImmutableSet(["cadena", "de", "devuelve",
         "entero","real", "entonces", "es", "escribe", "lee", "fin",
         "funcion", "globales", "llama",  "locales",
-        "nl", "secuencia", "si", "si_no", "vector"])
+        "nl", "secuencia", "si", "si_no", "vector", "mientras", "hacer"])
 def trataId(c):
   try:
     if c.lexema in _reservadas or (c.lexema.lower() in _reservadas and c.lexema.upper()==c.lexema):
@@ -560,24 +560,24 @@ mc_primeros = {
     '<Perfil>' : [u'!('],
     '<Producto>' : [u'opad', u'numreal', u'!(', u'num', u'llama', u'id', u'cad'],
     '<Programa>' : [u'secuencia', u'globales', u'funcion'],
-    '<Sentencia>' : [u'escribe', u'si', u'secuencia', u'nl', u'lee', u'devuelve', u'id'],
+    '<Sentencia>' : [u'escribe', u'mientras', u'si', u'secuencia', u'nl', u'lee', u'devuelve', u'id'],
     '<Termino>' : [u'opad', u'numreal', u'!(', u'num', u'llama', u'id', u'cad'],
     '<Tipo>' : [u'cadena', u'real', u'vector', u'entero'],
 }
 mc_siguientes = {
-    '<AccesoVariable>' : [u'opad', u'!)', u'!]', u'!,', u'entonces', u'opcom', u'opmul', u'!;', u'!='],
-    '<Comparado>' : [u'!)', u'!,', u'entonces', u'opcom', u'!;', u'!]'],
-    '<Compuesta>' : [u'secuencia', u'nl', u'lee', u'escribe', 'mc_EOF', u'si', u'si_no', u'devuelve', u'fin', u'id', u'funcion'],
+    '<AccesoVariable>' : [u'hacer', u'opad', u'!)', u'!]', u'!,', u'entonces', u'opcom', u'opmul', u'!;', u'!='],
+    '<Comparado>' : [u'hacer', u'!)', u'!,', u'entonces', u'opcom', u'!;', u'!]'],
+    '<Compuesta>' : [u'secuencia', u'nl', u'lee', u'mientras', u'escribe', 'mc_EOF', u'si', u'si_no', u'devuelve', u'fin', u'id', u'funcion'],
     '<Definicion>' : [u'!)', u'!;'],
-    '<Expresion>' : [u'!)', u'!;', u'!]', u'!,', u'entonces'],
+    '<Expresion>' : [u'hacer', u'!)', u'!;', u'!]', u'!,', u'entonces'],
     '<Funcion>' : [u'secuencia', u'funcion'],
     '<Globales>' : [u'secuencia', u'funcion'],
-    '<Llamada>' : [u'opad', u'!)', u'!,', u'entonces', u'opcom', u'opmul', u'!;', u'!]'],
+    '<Llamada>' : [u'hacer', u'opad', u'!)', u'!,', u'entonces', u'opcom', u'opmul', u'!;', u'!]'],
     '<Perfil>' : [u'es'],
-    '<Producto>' : [u'opad', u'!)', u'!,', u'entonces', u'opcom', u'!;', u'!]'],
+    '<Producto>' : [u'hacer', u'opad', u'!)', u'!,', u'entonces', u'opcom', u'!;', u'!]'],
     '<Programa>' : ['mc_EOF'],
-    '<Sentencia>' : [u'secuencia', u'nl', u'lee', u'escribe', u'si', u'si_no', u'devuelve', u'fin', u'id'],
-    '<Termino>' : [u'opad', u'!)', u'!,', u'entonces', u'opcom', u'opmul', u'!;', u'!]'],
+    '<Sentencia>' : [u'secuencia', u'nl', u'lee', u'escribe', u'mientras', u'si', u'si_no', u'devuelve', u'fin', u'id'],
+    '<Termino>' : [u'hacer', u'opad', u'!)', u'!,', u'entonces', u'opcom', u'opmul', u'!;', u'!]'],
     '<Tipo>' : [u'!)', u'!;', u'es'],
 }
 mc_aceptables = {
@@ -592,7 +592,7 @@ mc_aceptables = {
     '<Perfil>' : [u'!('],
     '<Producto>' : [u'opad', u'numreal', u'num', u'llama', u'!(', u'id', u'cad'],
     '<Programa>' : [u'secuencia', u'globales', u'funcion'],
-    '<Sentencia>' : [u'escribe', u'si', u'secuencia', u'nl', u'lee', u'devuelve', u'id'],
+    '<Sentencia>' : [u'secuencia', u'nl', u'lee', u'escribe', u'mientras', u'si', u'devuelve', u'id'],
     '<Termino>' : [u'opad', u'numreal', u'num', u'llama', u'!(', u'id', u'cad'],
     '<Tipo>' : [u'cadena', u'real', u'vector', u'entero'],
 }
@@ -665,8 +665,8 @@ class AnalizadorSintactico:
             else:
                 mc_error('<AccesoVariable>', [u'!]'])
             arb= AST.NodoAccesoVector(arb, Expresion.arb, nlinea)
-        if not mc_al.actual.cat in [ u'!)', '!,', '!;', '!=', '!]', 'entonces', 'opad', 'opcom', 'opmul' ]:
-            mc_error('<AccesoVariable>',[ u'!)', '!,', '!;', '!=', '![', '!]', 'entonces', 'opad', 'opcom', 'opmul' ])
+        if not mc_al.actual.cat in [ u'!)', '!,', '!;', '!=', '!]', 'entonces', 'hacer', 'opad', 'opcom', 'opmul' ]:
+            mc_error('<AccesoVariable>',[ u'!)', '!,', '!;', '!=', '![', '!]', 'entonces', 'hacer', 'opad', 'opcom', 'opmul' ])
         AccesoVariable.arb= arb
     def mc_analiza_Comparado(self, Comparado):
         mc_al = self.mc_al
@@ -683,8 +683,8 @@ class AnalizadorSintactico:
             self.mc_analiza_Producto(Producto2)
             Producto_ = Producto2
             arb= AST.NodoAritmetica(opad.lexema, arb, Producto_.arb, opad.nlinea)
-        if not mc_al.actual.cat in [ u'!)', '!,', '!;', '!]', 'entonces', 'opcom' ]:
-            mc_error('<Comparado>',[ u'!)', '!,', '!;', '!]', 'entonces', 'opad', 'opcom' ])
+        if not mc_al.actual.cat in [ u'!)', '!,', '!;', '!]', 'entonces', 'hacer', 'opcom' ]:
+            mc_error('<Comparado>',[ u'!)', '!,', '!;', '!]', 'entonces', 'hacer', 'opad', 'opcom' ])
         Comparado.arb= arb
     def mc_analiza_Compuesta(self, Compuesta):
         mc_al = self.mc_al
@@ -694,12 +694,12 @@ class AnalizadorSintactico:
         l= []
         secuencia = secuencia1 = secuencia_ = mc_al.actual
         mc_al.avanza()
-        while mc_al.actual.cat in [ u'devuelve', 'escribe', 'id', 'lee', 'nl', 'secuencia', 'si' ]:
+        while mc_al.actual.cat in [ u'devuelve', 'escribe', 'id', 'lee', 'mientras', 'nl', 'secuencia', 'si' ]:
             self.mc_analiza_Sentencia(Sentencia1)
             Sentencia_ = Sentencia1
             l.append(Sentencia.arb)
         if not mc_al.actual.cat == u'fin':
-            mc_error('<Compuesta>',[ u'devuelve', 'escribe', 'fin', 'id', 'lee', 'nl', 'secuencia', 'si' ])
+            mc_error('<Compuesta>',[ u'devuelve', 'escribe', 'fin', 'id', 'lee', 'mientras', 'nl', 'secuencia', 'si' ])
         if mc_al.actual.cat == u'fin':
             fin = fin1 = fin_ = mc_al.actual
             mc_al.avanza()
@@ -763,8 +763,8 @@ class AnalizadorSintactico:
                     self.mc_analiza_Comparado(Comparado2)
                     Comparado_ = Comparado2
                     arb= AST.NodoComparacion(opcom.lexema, arb, Comparado_.arb, opcom.nlinea)
-                if not mc_al.actual.cat in [ u'!)', '!,', '!;', '!]', 'entonces' ]:
-                    mc_error('<Expresion>',[ u'!)', '!,', '!;', '!]', 'entonces', 'opcom' ])
+                if not mc_al.actual.cat in [ u'!)', '!,', '!;', '!]', 'entonces', 'hacer' ]:
+                    mc_error('<Expresion>',[ u'!)', '!,', '!;', '!]', 'entonces', 'hacer', 'opcom' ])
                 Expresion.arb= arb
             except mc_error_sintaxis, (mc_nt, mc_t):
                 if errsintactico.trataError(mc_al, mc_nt, "<Expresion>"):
@@ -955,8 +955,8 @@ class AnalizadorSintactico:
             self.mc_analiza_Termino(Termino2)
             Termino_ = Termino2
             arb= AST.NodoAritmetica(opmul.lexema, arb, Termino_.arb, opmul.nlinea)
-        if not mc_al.actual.cat in [ u'!)', '!,', '!;', '!]', 'entonces', 'opad', 'opcom' ]:
-            mc_error('<Producto>',[ u'!)', '!,', '!;', '!]', 'entonces', 'opad', 'opcom', 'opmul' ])
+        if not mc_al.actual.cat in [ u'!)', '!,', '!;', '!]', 'entonces', 'hacer', 'opad', 'opcom' ]:
+            mc_error('<Producto>',[ u'!)', '!,', '!;', '!]', 'entonces', 'hacer', 'opad', 'opcom', 'opmul' ])
         Producto.arb= arb
     def mc_analiza_Programa(self, Programa):
         mc_al = self.mc_al
@@ -994,8 +994,8 @@ class AnalizadorSintactico:
         while self.mc_reintento[-1]:
             self.mc_reintento[-1]= False
             try:
-                if not mc_al.actual.cat in [ u'devuelve', 'escribe', 'id', 'lee', 'nl', 'secuencia', 'si' ]:
-                    mc_error('<Sentencia>', [ u'devuelve', 'escribe', 'id', 'lee', 'nl', 'secuencia', 'si' ])
+                if not mc_al.actual.cat in [ u'devuelve', 'escribe', 'id', 'lee', 'mientras', 'nl', 'secuencia', 'si' ]:
+                    mc_error('<Sentencia>', [ u'devuelve', 'escribe', 'id', 'lee', 'mientras', 'nl', 'secuencia', 'si' ])
                 if mc_al.actual.cat == u'secuencia':
                     Compuesta = Compuesta1 = Atributos()
                     self.mc_analiza_Compuesta(Compuesta1)
@@ -1057,22 +1057,22 @@ class AnalizadorSintactico:
                         mc_al.avanza()
                     else:
                         mc_error('<Sentencia>', [u'entonces'])
-                    while mc_al.actual.cat in [ u'devuelve', 'escribe', 'id', 'lee', 'nl', 'secuencia', 'si' ]:
+                    while mc_al.actual.cat in [ u'devuelve', 'escribe', 'id', 'lee', 'mientras', 'nl', 'secuencia', 'si' ]:
                         self.mc_analiza_Sentencia(Sentencia1)
                         Sentencia_ = Sentencia1
                         s.append(Sentencia1.arb)
                     if not mc_al.actual.cat in [ u'fin', 'si_no' ]:
-                        mc_error('<Sentencia>',[ u'devuelve', 'escribe', 'fin', 'id', 'lee', 'nl', 'secuencia', 'si', 'si_no' ])
+                        mc_error('<Sentencia>',[ u'devuelve', 'escribe', 'fin', 'id', 'lee', 'mientras', 'nl', 'secuencia', 'si', 'si_no' ])
                     l.append(s)
                     if mc_al.actual.cat == u'si_no':
                         si_no = si_no1 = si_no_ = mc_al.actual
                         mc_al.avanza()
-                        while mc_al.actual.cat in [ u'devuelve', 'escribe', 'id', 'lee', 'nl', 'secuencia', 'si' ]:
+                        while mc_al.actual.cat in [ u'devuelve', 'escribe', 'id', 'lee', 'mientras', 'nl', 'secuencia', 'si' ]:
                             self.mc_analiza_Sentencia(Sentencia2)
                             Sentencia_ = Sentencia2
                             n.append(Sentencia2.arb)
                         if not mc_al.actual.cat == u'fin':
-                            mc_error('<Sentencia>',[ u'devuelve', 'escribe', 'fin', 'id', 'lee', 'nl', 'secuencia', 'si' ])
+                            mc_error('<Sentencia>',[ u'devuelve', 'escribe', 'fin', 'id', 'lee', 'mientras', 'nl', 'secuencia', 'si' ])
                         l.append(n)
                     if mc_al.actual.cat == u'fin':
                         fin = fin1 = fin_ = mc_al.actual
@@ -1080,6 +1080,31 @@ class AnalizadorSintactico:
                     else:
                         mc_error('<Sentencia>', [u'fin'])
                     Sentencia.arb= AST.NodoSi(Expresion.arb, l, si.nlinea)
+                elif mc_al.actual.cat == u'mientras':
+                    Expresion = Expresion1 = Atributos()
+                    Sentencia1 = Atributos()
+                    l=[]
+                    mientras = mientras1 = mientras_ = mc_al.actual
+                    mc_al.avanza()
+                    self.mc_analiza_Expresion(Expresion1)
+                    Expresion_ = Expresion1
+                    if mc_al.actual.cat == u'hacer':
+                        hacer = hacer1 = hacer_ = mc_al.actual
+                        mc_al.avanza()
+                    else:
+                        mc_error('<Sentencia>', [u'hacer'])
+                    while mc_al.actual.cat in [ u'devuelve', 'escribe', 'id', 'lee', 'mientras', 'nl', 'secuencia', 'si' ]:
+                        self.mc_analiza_Sentencia(Sentencia1)
+                        Sentencia_ = Sentencia1
+                        l.append(Sentencia1.arb)
+                    if not mc_al.actual.cat == u'fin':
+                        mc_error('<Sentencia>',[ u'devuelve', 'escribe', 'fin', 'id', 'lee', 'mientras', 'nl', 'secuencia', 'si' ])
+                    if mc_al.actual.cat == u'fin':
+                        fin = fin1 = fin_ = mc_al.actual
+                        mc_al.avanza()
+                    else:
+                        mc_error('<Sentencia>', [u'fin'])
+                    Sentencia.arb= AST.NodoMientras(Expresion.arb, l, mientras.nlinea)
                 elif mc_al.actual.cat == u'id':
                     AccesoVariable = AccesoVariable1 = Atributos()
                     Expresion = Expresion1 = Atributos()

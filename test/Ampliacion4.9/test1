@@ -1,0 +1,10 @@
+globales
+    num: entero;
+fin
+secuencia
+    num = 1;
+    mientras num <= 10 hacer
+        escribe num, " ";
+        num = num +1;
+    fin
+fin
