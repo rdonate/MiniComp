@@ -478,7 +478,6 @@ class NodoLlamada(AST):
             if not arg.__class__.__name__=="NodoAccesoVariable":
               errores.semantico("No coincide el tipo del parametro %d (deberia ser %s)." %
                                 (i + 1, pf.tipo), self.linea)
-            pass
 
   def generaCodigo(self,c):
     c.append(R.Comentario("Llamada a %s en linea %d" % (self.f.id, self.linea)))
@@ -491,7 +490,7 @@ class NodoLlamada(AST):
       c.append(R.addi("sp", "sp", len(act)))
     for i in range(len(self.args)):
       self.args[i].compsemanticas()
-      if self.f.parametros[i].tipo==tipos.Real and self.args[i].tipo==tipos.Entero:
+      if self.tipo==tipos.Real and self.args[i].tipo==tipos.Entero and not self.args[i].referencia:
         r = NodoEnteroAReal(self.args[i]).generaCodigo(c)
       else:
         r= self.args[i].generaCodigo(c)
