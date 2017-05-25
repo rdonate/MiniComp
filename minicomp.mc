@@ -95,11 +95,14 @@ $mc_al.sincroniza(["mc_EOF"])$
   ;
 
 <Definicion> ->
-  id @l=[id]@
-  ( "," id @l.append(id2)@ )*
+  @referencia=False@
+  (pr @referencia=True@ )? id @id.referencia=referencia@
+  @l=[id]@
+  ( "," @referencia=False@ (pr @referencia=True@)? id @id2.referencia=referencia@
+  @l.append(id2)@ )*
   ":" <Tipo>
   @for id in l:@
-  @  var= variables.Variable(id.lexema, Tipo.tipo, TDS.enFuncion()!= None, id.nlinea)@
+  @  var= variables.Variable(id.lexema, Tipo.tipo, TDS.enFuncion()!= None, id.referencia, id.nlinea)@
   @  Definicion.variables.append(var)@
   @  TDS.define(id.lexema, var, id.nlinea)@
   ;
@@ -272,7 +275,7 @@ $mc_al.sincroniza(["mc_EOF"])$
   id
   @if not TDS.existe(id.lexema):@
   @  errores.semantico("La variable %s no está definida." % id.lexema, id.nlinea)@
-  @  var= variables.Variable(id.lexema, tipos.Error, TDS.enFuncion()!= None, id.nlinea)@
+  @  var= variables.Variable(id.lexema, tipos.Error, TDS.enFuncion()!= None, id.referencia, id.nlinea)@
   @  TDS.define(id.lexema, var, id.nlinea)@
   @arb= AST.NodoAccesoVariable(TDS.recupera(id.lexema), id.nlinea)@
   (

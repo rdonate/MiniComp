@@ -2,11 +2,11 @@
 import tipos
 
 class Variable:
-  def __init__(self, id, tipo, local, nlinea):
+  def __init__(self, id, tipo, local, referencia, nlinea):
     self.id= id
     self.tipo= tipo
-    self.\
-      local= local
+    self.local= local
+    self.referencia=referencia
     self.nlinea= nlinea
 
   def talla(self):

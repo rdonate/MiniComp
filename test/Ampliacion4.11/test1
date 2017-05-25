@@ -1,10 +1,30 @@
+globales
+    r:real;
+    e:entero;
+    v:vector[10] de real;
+fin
 funcion area_triangulo(base,altura: real): real
 es
 secuencia
     devuelve base*altura/2;
 fin
 
+funcion f(a, pr b,c:real):entero
+es
+locales
+    d:entero;
+fin
+secuencia
+    d=1;
+    devuelve d;
+fin
+
 secuencia
     escribe "El area del triangulo es ",llama area_triangulo(3.1,5.1),".\n";
     escribe "El area del triangulo es ",llama area_triangulo(2,10),".\n";
+    r=4.5;
+    e=1;
+    v[0]=4.5;
+    escribe "Prueba de funcion con parametros por referencia.", llama f(4.5,r,e),".\n";
+    escribe "Prueba de funcion con parametros por referencia.", llama f(r,r,e),".\n";
 fin

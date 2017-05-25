@@ -469,7 +469,7 @@ def trataCad(c):
 _reservadas=ImmutableSet(["cadena", "de", "devuelve",
         "entero","real", "entonces", "es", "escribe", "lee", "fin",
         "funcion", "globales", "llama",  "locales",
-        "nl", "secuencia", "si", "si_no", "vector", "mientras", "hacer"])
+        "nl", "secuencia", "si", "si_no", "vector", "mientras", "hacer","pr"])
 def trataId(c):
   try:
     if c.lexema in _reservadas or (c.lexema.lower() in _reservadas and c.lexema.upper()==c.lexema):
@@ -552,7 +552,7 @@ mc_primeros = {
     '<AccesoVariable>' : [u'id'],
     '<Comparado>' : [u'opad', u'numreal', u'!(', u'num', u'llama', u'id', u'cad'],
     '<Compuesta>' : [u'secuencia'],
-    '<Definicion>' : [u'id'],
+    '<Definicion>' : [u'pr', u'id'],
     '<Expresion>' : [u'opad', u'numreal', u'!(', u'num', u'llama', u'id', u'cad'],
     '<Funcion>' : [u'funcion'],
     '<Globales>' : [u'globales'],
@@ -584,7 +584,7 @@ mc_aceptables = {
     '<AccesoVariable>' : [u'id'],
     '<Comparado>' : [u'opad', u'numreal', u'num', u'llama', u'!(', u'id', u'cad'],
     '<Compuesta>' : [u'secuencia'],
-    '<Definicion>' : [u'id'],
+    '<Definicion>' : [u'pr', u'id'],
     '<Expresion>' : [u'opad', u'numreal', u'num', u'llama', u'!(', u'id', u'cad'],
     '<Funcion>' : [u'funcion'],
     '<Globales>' : [u'globales'],
@@ -652,7 +652,7 @@ class AnalizadorSintactico:
         mc_al.avanza()
         if not TDS.existe(id.lexema):
           errores.semantico("La variable %s no está definida." % id.lexema, id.nlinea)
-          var= variables.Variable(id.lexema, tipos.Error, TDS.enFuncion()!= None, id.nlinea)
+          var= variables.Variable(id.lexema, tipos.Error, TDS.enFuncion()!= None, id.referencia, id.nlinea)
           TDS.define(id.lexema, var, id.nlinea)
         arb= AST.NodoAccesoVariable(TDS.recupera(id.lexema), id.nlinea)
         while mc_al.actual.cat == u'![':
@@ -713,19 +713,34 @@ class AnalizadorSintactico:
         while self.mc_reintento[-1]:
             self.mc_reintento[-1]= False
             try:
-                if not mc_al.actual.cat == u'id':
-                    mc_error('<Definicion>', [ u'id' ])
+                if not mc_al.actual.cat in [ u'id', 'pr' ]:
+                    mc_error('<Definicion>', [ u'id', 'pr' ])
                 Tipo = Tipo1 = Atributos()
-                id = id1 = id_ = mc_al.actual
-                mc_al.avanza()
+                referencia=False
+                if mc_al.actual.cat == u'pr':
+                    pr = pr1 = pr_ = mc_al.actual
+                    mc_al.avanza()
+                    referencia=True
+                if mc_al.actual.cat == u'id':
+                    id = id1 = id_ = mc_al.actual
+                    mc_al.avanza()
+                else:
+                    mc_error('<Definicion>', [u'id'])
+                id.referencia=referencia
                 l=[id]
                 while mc_al.actual.cat == u'!,':
                     mc_al.avanza()
+                    referencia=False
+                    if mc_al.actual.cat == u'pr':
+                        pr2 = pr_ = mc_al.actual
+                        mc_al.avanza()
+                        referencia=True
                     if mc_al.actual.cat == u'id':
                         id2 = id_ = mc_al.actual
                         mc_al.avanza()
                     else:
                         mc_error('<Definicion>', [u'id'])
+                    id2.referencia=referencia
                     l.append(id2)
                 if not mc_al.actual.cat == u'!:':
                     mc_error('<Definicion>',[ u'!,', '!:' ])
@@ -736,7 +751,7 @@ class AnalizadorSintactico:
                 self.mc_analiza_Tipo(Tipo1)
                 Tipo_ = Tipo1
                 for id in l:
-                  var= variables.Variable(id.lexema, Tipo.tipo, TDS.enFuncion()!= None, id.nlinea)
+                  var= variables.Variable(id.lexema, Tipo.tipo, TDS.enFuncion()!= None, id.referencia, id.nlinea)
                   Definicion.variables.append(var)
                   TDS.define(id.lexema, var, id.nlinea)
             except mc_error_sintaxis, (mc_nt, mc_t):
@@ -813,9 +828,9 @@ class AnalizadorSintactico:
                             mc_al.avanza()
                         else:
                             mc_error('<Funcion>', [u'!;'])
-                        if mc_al.actual.cat != u'id': break
+                        if mc_al.actual.cat not in [ u'id', 'pr' ]: break
                     if not mc_al.actual.cat == u'fin':
-                        mc_error('<Funcion>',[ u'id' ])
+                        mc_error('<Funcion>',[ u'id', 'pr' ])
                     if mc_al.actual.cat == u'fin':
                         fin = fin1 = fin_ = mc_al.actual
                         mc_al.avanza()
@@ -858,9 +873,9 @@ class AnalizadorSintactico:
                         mc_al.avanza()
                     else:
                         mc_error('<Globales>', [u'!;'])
-                    if mc_al.actual.cat != u'id': break
+                    if mc_al.actual.cat not in [ u'id', 'pr' ]: break
                 if not mc_al.actual.cat == u'fin':
-                    mc_error('<Globales>',[ u'id' ])
+                    mc_error('<Globales>',[ u'id', 'pr' ])
                 if mc_al.actual.cat == u'fin':
                     fin = fin1 = fin_ = mc_al.actual
                     mc_al.avanza()
@@ -918,7 +933,7 @@ class AnalizadorSintactico:
         Tipo = Tipo1 = Atributos()
         Perfil.parametros= []
         mc_al.avanza()
-        if mc_al.actual.cat == u'id':
+        if mc_al.actual.cat in [ u'id', 'pr' ]:
             Definicion.variables= Perfil.parametros
             self.mc_analiza_Definicion(Definicion1)
             Definicion_ = Definicion1
